@@ -2,6 +2,12 @@ import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import '@/styles/globals.css';
+import { Providers } from "./providers";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/index";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 
 // FIX: Node v25 introduces a broken `localStorage` global object without methods.
 // Many third-party libraries (like Radix UI or Framer Motion) check `typeof localStorage !== 'undefined'`
@@ -10,9 +16,9 @@ if (typeof global !== 'undefined' && global.localStorage && !global.localStorage
   Object.defineProperty(global, 'localStorage', {
     value: {
       getItem: () => null,
-      setItem: () => {},
-      removeItem: () => {},
-      clear: () => {},
+      setItem: () => { },
+      removeItem: () => { },
+      clear: () => { },
     },
     writable: true,
   });
@@ -36,18 +42,21 @@ export const metadata: Metadata = {
     'Browse verified office spaces, event halls, and residential properties. Connect directly with owners, no middlemen.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
   return (
     <html lang="en" className="light" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}
         style={{ scrollBehavior: 'smooth' }}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );
