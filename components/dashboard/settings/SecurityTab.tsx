@@ -6,82 +6,14 @@ import { Mail, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PasswordUpdateForm from "./PasswordUpdateForm";
 import PhoneUpdateForm from "./PhoneUpdateForm";
+import EmailUpdateForm from "./EmailUpdateForm";
 
 export function SecurityTab() {
-  const [emailStep, setEmailStep] = useState<"form" | "otp" | "success">("form");
-  const [phoneStep, setPhoneStep] = useState<"form" | "otp" | "success">("form");
 
   return (
     <motion.div key="security" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="min-w-0 space-y-6">
 
-      {/* Email Change Section */}
-      <GlassCard className="min-w-0 p-6 sm:p-8 space-y-8 bg-white dark:bg-slate-800 border-gray-100 dark:border-white/5 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <Mail className="w-6 h-6 text-blue-600" />
-          <h3 className="font-bold text-gray-900 dark:text-white text-xl">Change Email Address</h3>
-        </div>
-
-        <AnimatePresence mode="wait">
-          {emailStep === "form" && (
-            <motion.div key="email-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6 max-w-xl">
-              <div className="space-y-2.5">
-                <label className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">New Email Address</label>
-                <input type="email" placeholder="new.email@example.com" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white text-sm outline-none focus:border-blue-500/50 transition-all" />
-              </div>
-              <button
-                onClick={() => setEmailStep("otp")}
-                className="px-8 py-4 rounded-2xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/25 hover:bg-blue-700 transition-all active:scale-95"
-              >
-                Send Verification Code
-              </button>
-            </motion.div>
-          )}
-
-          {emailStep === "otp" && (
-            <motion.div key="email-otp" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6 max-w-xl">
-              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-blue-800 dark:text-blue-300 text-sm font-medium">
-                We've sent a 6-digit verification code to your new email address. Please enter it below.
-              </div>
-              <div className="space-y-2.5">
-                <label className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Verification Code</label>
-                <div className="flex gap-3">
-                  {[...Array(6)].map((_, i) => (
-                    <input key={i} type="text" maxLength={1} className="w-12 h-14 text-center text-xl font-bold rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white outline-none focus:border-blue-500/50 transition-all" />
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setEmailStep("success")}
-                  className="px-8 py-4 rounded-2xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/25 hover:bg-blue-700 transition-all active:scale-95"
-                >
-                  Verify & Update Email
-                </button>
-                <button
-                  onClick={() => setEmailStep("form")}
-                  className="px-8 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 transition-all active:scale-95"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {emailStep === "success" && (
-            <motion.div key="email-success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center p-8 text-center bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl max-w-xl">
-              <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-4" />
-              <h4 className="text-lg font-bold text-emerald-900 dark:text-emerald-300 mb-2">Email Successfully Updated</h4>
-              <p className="text-sm text-emerald-700 dark:text-emerald-400">Your account email has been verified and updated.</p>
-              <button
-                onClick={() => setEmailStep("form")}
-                className="mt-6 px-6 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all"
-              >
-                Done
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </GlassCard>
+      <EmailUpdateForm />
 
       <PhoneUpdateForm />
 
