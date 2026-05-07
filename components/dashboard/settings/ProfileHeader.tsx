@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { uploadProfilePicture } from "@/lib/actions/photo-upload";
+import { uploadProfilePicture } from "@/lib/actions/user-actions";
 import { Camera } from "lucide-react";
 
 export function ProfileHeader({ user }: { user: any }) {
