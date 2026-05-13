@@ -186,11 +186,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     if (dbUser) {
                         token.id = dbUser.id; // Assign Postgres UUID
                         token.phoneNumber = dbUser.phoneNumber;
+                        token.role = user.role;
                     }
                 } else {
                     // For Credentials provider (Email/Phone + Password)
                     token.id = user.id;
                     token.phoneNumber = user.phoneNumber;
+                    token.role = user.role;
                 }
             }
 
@@ -208,6 +210,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 // Map our custom token data into the final session object
                 session.user.id = token.id as string;
                 session.user.phoneNumber = token.phoneNumber as string;
+                session.user.role = token.role;
             }
             return session;
         },
