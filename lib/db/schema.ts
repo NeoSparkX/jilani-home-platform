@@ -23,26 +23,27 @@ export const propertyTypeEnum = pgEnum('property_type', ['house', 'office', 'hal
 export const propertyStatusEnum = pgEnum('property_status', ['pending', 'active', 'inactive', 'expired']);
 export const transactionStatusEnum = pgEnum('transaction_status', ['pending', 'success', 'failed']);
 export const inquiryStatusEnum = pgEnum('inquiry_status', ['pending', 'contacted', 'closed']);
+export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed_amount']); // NEW
 
 // ==========================================
-// 2. USERS (Integrated with Auth.js Logic)
+// 2. USERS (The Wallet)
 // ==========================================
 export const users = pgTable('users', {
     id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name'),
-    name_bn: varchar('name_bn'), // Optional
+    name_bn: varchar('name_bn'),
     email: varchar('email').unique(),
-    phoneNumber: varchar('phone_number').unique(), // Primary for anti-scam OTP
-    password: text('password'), // Hashed
+    phoneNumber: varchar('phone_number').unique(),
+    password: text('password'),
     role: roleEnum('role').default('user').notNull(),
     image: varchar('image'),
 
-    //Track the exact moment their 2-month access expires
-    subscriptionEndsAt: timestamp('subscription_ends_at'),
+    // NEW: User's Wallet Balance
+    pointsBalance: integer('points_balance').default(0).notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
-    deletedAt: timestamp('deleted_at'), // Soft delete
+    deletedAt: timestamp('deleted_at'),
 });
 
 // ==========================================
@@ -50,10 +51,23 @@ export const users = pgTable('users', {
 // ==========================================
 export const zones = pgTable('zones', {
     id: serial('id').primaryKey(),
-    name: varchar('name').notNull(), // e.g., "Dhanmondi"
-    name_bn: varchar('name_bn'),     // e.g., "ধানমন্ডি"
-    city: varchar('city').notNull(), // e.g., "Dhaka"
-    city_bn: varchar('city_bn'),     // e.g., "ঢাকা"
+
+    name: varchar('name').notNull(),
+    name_bn: varchar('name_bn').notNull(),
+
+    // Level 1: City / District (e.g., Dhaka, Chattogram)
+    city: varchar('city'),
+    city_bn: varchar('city_bn'),
+
+    // Level 2: Thana / Upazila (e.g., Mirpur, Dhanmondi, Kotwali)
+    thana: varchar('thana'),
+    thana_bn: varchar('thana_bn'),
+
+    // Level 3: Specific Area / Neighborhood (e.g., Mirpur 10, Bosila)
+    area: varchar('area'),
+    area_bn: varchar('area_bn'),
+
+    isActive: boolean('is_active').default(true), // Admins can disable zones
 });
 
 // ==========================================
@@ -63,39 +77,54 @@ export const properties = pgTable('properties', {
     id: uuid('id').defaultRandom().primaryKey(),
     ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     zoneId: integer('zone_id').references(() => zones.id, { onDelete: 'restrict' }).notNull(),
+
     title: varchar('title').notNull(),
     title_bn: varchar('title_bn'),
     description: text('description'),
     description_bn: text('description_bn'),
+
+    // NEW: Main cover image for fast UI loading
+    coverImage: text('cover_image'),
+
     type: propertyTypeEnum('type').notNull(),
-    price: decimal('price', { precision: 12, scale: 2 }).notNull(), // Supports large values
+    price: decimal('price', { precision: 12, scale: 2 }).notNull(),
     sizeSqft: integer('size_sqft'),
     roomCount: integer('room_count').notNull(),
-    amenities: jsonb('amenities'), // e.g., ["Lift", "Generator"]
+    amenities: jsonb('amenities'),
     amenities_bn: jsonb('amenities_bn'),
+
     status: propertyStatusEnum('status').default('pending').notNull(),
     viewsCount: integer('views_count').default(0).notNull(),
     lastActivityDate: timestamp('last_activity_date').defaultNow().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
-    deletedAt: timestamp('deleted_at'), // Soft delete
+    deletedAt: timestamp('deleted_at'),
 });
 
 // ==========================================
-// 5. LOCATIONS (Separated for Paywall Security)
+// 5. PRIVATE LOCATIONS (Paywall Security)
 // ==========================================
-export const propertyLocationsPublic = pgTable('property_locations_public', {
-    propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }).primaryKey(),
-    approxLat: decimal('approx_lat', { precision: 9, scale: 6 }).notNull(),
-    approxLng: decimal('approx_lng', { precision: 9, scale: 6 }).notNull(),
-});
-
 export const propertyLocationsPrivate = pgTable('property_locations_private', {
     propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }).primaryKey(),
-    exactAddress: text('exact_address').notNull(), // Encrypted at code level
-    exactAddress_bn: text('exact_address_bn'),
-    exactLat: decimal('exact_lat', { precision: 9, scale: 6 }).notNull(),
-    exactLng: decimal('exact_lng', { precision: 9, scale: 6 }).notNull(),
+
+    // Specific Identifier (e.g., "House 12", "Flat 4B", "Kazi Villa")
+    houseOrBuilding: varchar('house_or_building'),
+    houseOrBuilding_bn: varchar('house_or_building_bn'),
+
+    // Routing (e.g., "Road 5", "Village Rahimpur")
+    roadOrVillage: varchar('road_or_village'),
+    roadOrVillage_bn: varchar('road_or_village_bn'),
+
+    // Subdivision (e.g., "Block C", "Sector 10")
+    blockOrSector: varchar('block_or_sector'),
+    blockOrSector_bn: varchar('block_or_sector_bn'),
+
+    // Cultural/Visual Identification (e.g., "Beside Boro Masjid")
+    landmark: text('landmark'),
+    landmark_bn: text('landmark_bn'),
+
+    // Optional: Keep a full concatenated string just in case you need it for SMS/Email APIs easily
+    fullExactAddress: text('full_exact_address').notNull(),
 });
 
 // ==========================================
@@ -105,24 +134,57 @@ export const propertyImages = pgTable('property_images', {
     id: uuid('id').defaultRandom().primaryKey(),
     propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }).notNull(),
     imageUrl: text('image_url').notNull(),
-    isPrimary: boolean('is_primary').default(false).notNull(),
+    isPrimary: boolean('is_primary').default(false).notNull(), // Keep for gallery sorting
 });
 
 export const ownerContacts = pgTable('owner_contacts', {
     id: uuid('id').defaultRandom().primaryKey(),
     ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    name: varchar('name').notNull(),
+    name_bn: varchar('name_bn'),
     phone: text('phone').notNull(), // Encrypted
     whatsapp: text('whatsapp'),
     updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
 });
 
 // ==========================================
-// 7. PAYMENTS & ACCESS
+// 7. STORE & PROMOS (New)
+// ==========================================
+export const pointPackages = pgTable('point_packages', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: varchar('name').notNull(),          // e.g., "1000 Points"
+    name_bn: varchar('name_bn'),
+    points: integer('points').notNull(),      // e.g., 1000
+    price: decimal('price', { precision: 10, scale: 2 }).notNull(), // e.g., 500.00
+    isActive: boolean('is_active').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const promoCodes = pgTable('promo_codes', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    code: varchar('code').notNull().unique(), // e.g., "WINTER20"
+    discountType: discountTypeEnum('discount_type').notNull(),
+    discountValue: decimal('discount_value', { precision: 10, scale: 2 }).notNull(),
+    maxUses: integer('max_uses'),
+    timesUsed: integer('times_used').default(0).notNull(),
+    validUntil: timestamp('valid_until'),
+    isActive: boolean('is_active').default(true).notNull(),
+});
+
+// ==========================================
+// 8. TRANSACTIONS (Buying Points)
 // ==========================================
 export const transactions = pgTable('transactions', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'restrict' }).notNull(),
-    amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+    packageId: uuid('package_id').references(() => pointPackages.id, { onDelete: 'restrict' }).notNull(),
+    promoCodeId: uuid('promo_code_id').references(() => promoCodes.id, { onDelete: 'set null' }),
+
+    originalAmount: decimal('original_amount', { precision: 10, scale: 2 }).notNull(), // The base price of the package
+    discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).default('0').notNull(), // The exact Taka discounted
+    amountPaid: decimal('amount_paid', { precision: 10, scale: 2 }).notNull(), // The final amount (Original - Discount)
+    pointsCredited: integer('points_credited').notNull(), // Points added to wallet
+
     gateway: varchar('gateway'), // e.g., 'bKash'
     gatewayTrxId: varchar('gateway_trx_id').unique(),
     status: transactionStatusEnum('status').default('pending').notNull(),
@@ -130,18 +192,25 @@ export const transactions = pgTable('transactions', {
     updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
 });
 
-export const userSubscriptions = pgTable('user_subscriptions', {
+// ==========================================
+// 9. UNLOCKS (Spending Points / 2-Month Access)
+// ==========================================
+export const unlocks = pgTable('unlocks', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-    transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'restrict' }).notNull(),
-    startDate: timestamp('start_date').defaultNow().notNull(),
-    endDate: timestamp('end_date').notNull(), // Will be set to 2 months from start_date
-    isActive: boolean('is_active').default(true).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+    propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }).notNull(),
+
+    pointsSpent: integer('points_spent').notNull(), // e.g., 50 points
+    unlockedAt: timestamp('unlocked_at').defaultNow().notNull(),
+    expiresAt: timestamp('expires_at').notNull(), // Calculated in code: unlockedAt + 2 months
+}, (table) => ({
+    // Ensures a user only has one active record per property. 
+    // If they renew, you UPDATE the expiresAt rather than inserting a new row.
+    unq: unique().on(table.userId, table.propertyId),
+}));
 
 // ==========================================
-// 8. ENGAGEMENT & ALERTS
+// 10. ENGAGEMENT & ALERTS
 // ==========================================
 export const savedProperties = pgTable('saved_properties', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -173,10 +242,8 @@ export const zoneSubscriptions = pgTable('zone_subscriptions', {
 }));
 
 // ==========================================
-// 9. AUTHENTICATION (NextAuth.js)
+// 11. AUTHENTICATION (NextAuth.js)
 // ==========================================
-
-// Required for Google/OAuth login
 export const accounts = pgTable("accounts", {
     userId: uuid("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
     type: text("type").$type<"oauth" | "oidc" | "email" | "credentials">().notNull(),
@@ -193,10 +260,9 @@ export const accounts = pgTable("accounts", {
     compoundKey: primaryKey({ columns: [account.provider, account.providerAccountId] }),
 }));
 
-// Required for OTP (Phone & Email)
 export const verificationTokens = pgTable("verification_tokens", {
-    identifier: text("identifier").notNull(), // Phone number or Email
-    token: text("token").notNull(),           // The actual OTP code
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
 }, (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
@@ -204,8 +270,6 @@ export const verificationTokens = pgTable("verification_tokens", {
 
 export const sessions = pgTable("session", {
     sessionToken: text("sessionToken").primaryKey(),
-    userId: uuid("userId")
-        .notNull()
-        .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
     expires: timestamp("expires", { mode: "date" }).notNull(),
 });
