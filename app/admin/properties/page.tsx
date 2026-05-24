@@ -99,10 +99,10 @@ export default function AdminPropertiesPage() {
   };
 
   const filteredProperties = properties.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.location.toLowerCase().includes(search.toLowerCase()) ||
-    p.host.toLowerCase().includes(search.toLowerCase()) ||
-    (p.type || "").toLowerCase().includes(search.toLowerCase())
+    p.title.toLowerCase().includes(search.toLowerCase() || "") ||
+    p.location.toLowerCase().includes(search.toLowerCase() || "") ||
+    p.host.toLowerCase().includes(search.toLowerCase() || "") ||
+    (p.type || "").toLowerCase().includes(search.toLowerCase() || "")
   );
 
   return (
@@ -114,14 +114,14 @@ export default function AdminPropertiesPage() {
           <p className="text-gray-500 dark:text-gray-400 text-base">Manage and review all platform listings.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => setIsUploadOpen(true)}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm cursor-pointer"
           >
             <Upload className="w-4.5 h-4.5" />
             Bulk Upload
           </button>
-          <button 
+          <button
             onClick={() => setIsFormOpen(true)}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 cursor-pointer"
           >
@@ -198,7 +198,7 @@ export default function AdminPropertiesPage() {
                       <p className="text-[10px] text-gray-400 font-medium">Verified Host</p>
                     </td>
                     <td className="px-8 py-5">
-                       <p className="text-sm font-bold text-gray-900 dark:text-white">{p.price}</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{p.price}</p>
                     </td>
                     <td className="px-8 py-5 text-xs font-bold text-gray-500 dark:text-gray-400">{p.views.toLocaleString()}</td>
                     <td className="px-8 py-5">
@@ -220,11 +220,11 @@ export default function AdminPropertiesPage() {
           </table>
         </div>
         <div className="px-8 py-5 bg-gray-50 dark:bg-white/5 flex items-center justify-between border-t border-gray-100 dark:border-white/5">
-           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Showing {filteredProperties.length} of {properties.length} Results</p>
-           <div className="flex items-center gap-2">
-              <button className="px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-gray-200 dark:border-white/10 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase hover:bg-gray-50 transition-all">Prev</button>
-              <button className="px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-gray-200 dark:border-white/10 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase hover:bg-gray-50 transition-all">Next</button>
-           </div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Showing {filteredProperties.length} of {properties.length} Results</p>
+          <div className="flex items-center gap-2">
+            <button className="px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-gray-200 dark:border-white/10 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase hover:bg-gray-50 transition-all">Prev</button>
+            <button className="px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-gray-200 dark:border-white/10 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase hover:bg-gray-50 transition-all">Next</button>
+          </div>
         </div>
       </GlassCard>
 

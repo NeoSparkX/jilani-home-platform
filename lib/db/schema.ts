@@ -75,7 +75,7 @@ export const zones = pgTable('zones', {
 // ==========================================
 export const properties = pgTable('properties', {
     id: uuid('id').defaultRandom().primaryKey(),
-    ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    ownerId: uuid('owner_id').references(() => ownerContacts.id, { onDelete: 'cascade' }).notNull(),
     zoneId: integer('zone_id').references(() => zones.id, { onDelete: 'restrict' }).notNull(),
 
     title: varchar('title').notNull(),
@@ -140,7 +140,6 @@ export const propertyImages = pgTable('property_images', {
 
 export const ownerContacts = pgTable('owner_contacts', {
     id: uuid('id').defaultRandom().primaryKey(),
-    ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     name: varchar('name').notNull(),
     name_bn: varchar('name_bn'),
     phone: text('phone').notNull(), // Encrypted
