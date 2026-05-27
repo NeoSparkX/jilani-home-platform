@@ -21,6 +21,8 @@ import {
   Menu,
   Bell,
   Search,
+  MapPinned,
+  UserCheck,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -44,6 +46,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const adminLinks = [
     { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
     { name: "Properties", path: "/admin/properties", icon: Building2 },
+    { name: "Owners", path: "/admin/owners", icon: UserCheck },
+    { name: "Zones", path: "/admin/zones", icon: MapPinned },
     { name: "Users", path: "/admin/users", icon: Users },
     { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
     { name: "Verification", path: "/admin/verification", icon: CheckCircle },
