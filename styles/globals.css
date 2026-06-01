@@ -310,3 +310,5 @@ html.light .text-gray-800 { color: #1F2937 !important; }
 
 /* Placeholder text */
 html.light input::placeholder { color: #9CA3AF !important; }
+
+/* trigger reload */
