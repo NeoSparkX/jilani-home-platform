@@ -68,6 +68,7 @@ export const zones = pgTable('zones', {
     area_bn: varchar('area_bn'),
 
     isActive: boolean('is_active').default(true), // Admins can disable zones
+    createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // ==========================================
