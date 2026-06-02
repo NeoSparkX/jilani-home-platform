@@ -195,17 +195,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 
         // 2. JWT SESSION BUILDER
+        // 2. JWT SESSION BUILDER
         async jwt({ token, user, trigger, session, account }) {
-            // 'account' and 'user' are ONLY present on the very first login request
+            // 'account' and 'user' are ONLY present on the very first login request (Runs on Node.js - SAFE)
             if (account && user) {
                 if (account.provider === "google") {
-                    // Force the token to use the Database UUID, not the Google ID
                     const [dbUser] = await db
                         .select()
                         .from(users)
                         .where(eq(users.email, user.email as string));
 
-                    // 🚨 1. BLOCK INITIAL LOGIN FOR DELETED GOOGLE USERS
+                    // 🚨 BLOCK INITIAL LOGIN FOR DELETED GOOGLE USERS
                     if (dbUser && dbUser.deletedAt !== null) {
                         throw new Error("This account has been deactivated.");
                     }
@@ -217,7 +217,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     }
                 } else {
                     // For Credentials provider (Email/Phone + Password)
-                    // (Assuming you already check deletedAt inside your authorize() function)
                     token.id = user.id;
                     token.phoneNumber = user.phoneNumber;
                     token.role = user.role;
@@ -229,19 +228,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.phoneNumber = session.phoneNumber;
             }
 
-            // 🚨 2. INSTANTLY KICK OUT ACTIVE USERS IF DELETED MID-SESSION
-            // This runs on subsequent requests. We check if they were deleted while logged in.
-            if (token?.id) {
-                const [currentUser] = await db
-                    .select({ deletedAt: users.deletedAt }) // Only fetch what we need for performance
-                    .from(users)
-                    .where(eq(users.id, token.id));
-
-                // If the user doesn't exist anymore or was soft-deleted, destroy the token
-                if (!currentUser || currentUser.deletedAt !== null) {
-                    return null; // Returning null instantly logs the user out
-                }
-            }
+            // WE REMOVED THE MID-SESSION DB QUERY HERE TO PREVENT EDGE RUNTIME CRASHES
 
             return token;
         },
