@@ -1,6 +1,6 @@
 "use server";
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import crypto from "crypto";
 
 const s3Client = new S3Client({
@@ -35,16 +35,45 @@ export async function uploadPropertyImagesToR2(formData: FormData) {
         };
 
         // Upload Cover
-        const coverUrl = await uploadFile(coverFile, "properties/covers");
+        let coverUrl: string | null = null;
+        if (coverFile) {
+            coverUrl = await uploadFile(coverFile, "properties/covers");
+        }
 
         // Upload Gallery in parallel for speed
-        const galleryUrls = await Promise.all(
-            galleryFiles.map(f => uploadFile(f, "properties/gallery"))
-        );
+        let galleryUrls: string[] = [];
+        if (galleryFiles && galleryFiles.length > 0) {
+            galleryUrls = await Promise.all(
+                galleryFiles.map(f => uploadFile(f, "properties/gallery"))
+            );
+        }
 
         return { success: true, coverUrl, galleryUrls };
     } catch (error) {
         console.error("R2 Upload Error:", error);
         return { success: false, error: "Failed to upload to Cloudflare R2" };
+    }
+}
+
+export async function deleteFilesFromR2(urls: string[]) {
+    try {
+        if (!urls || urls.length === 0) return { success: true };
+        
+        const objectsToDelete = urls.map(url => {
+            const urlObj = new URL(url);
+            // URL pathname starts with '/', we need to remove it to get the key
+            const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+            return { Key: key };
+        });
+
+        await s3Client.send(new DeleteObjectsCommand({
+            Bucket: process.env.R2_BUCKET_NAME!,
+            Delete: { Objects: objectsToDelete }
+        }));
+
+        return { success: true };
+    } catch (error) {
+        console.error("R2 Delete Error:", error);
+        return { success: false, error: "Failed to delete from Cloudflare R2" };
     }
 }

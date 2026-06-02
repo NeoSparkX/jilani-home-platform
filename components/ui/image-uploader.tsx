@@ -10,9 +10,11 @@ interface ImageUploaderProps {
     value: File[];
     onChange: (files: File[]) => void;
     label?: string;
+    existingUrls?: string[];
+    onRemoveExisting?: (url: string) => void;
 }
 
-export function ImageUploader({ maxFiles = 1, value, onChange, label }: ImageUploaderProps) {
+export function ImageUploader({ maxFiles = 1, value, onChange, label, existingUrls = [], onRemoveExisting }: ImageUploaderProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
@@ -52,7 +54,7 @@ export function ImageUploader({ maxFiles = 1, value, onChange, label }: ImageUpl
             {label && <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">{label}</label>}
 
             {/* Upload Zone */}
-            {(value.length < maxFiles || maxFiles === 1 && value.length === 0) && (
+            {(value.length + existingUrls.length < maxFiles || maxFiles === 1 && (value.length === 0 && existingUrls.length === 0)) && (
                 <div
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
@@ -84,9 +86,29 @@ export function ImageUploader({ maxFiles = 1, value, onChange, label }: ImageUpl
             )}
 
             {/* Previews */}
-            {value.length > 0 && (
+            {(value.length > 0 || existingUrls.length > 0) && (
                 <div className={cn("grid gap-4 mt-4", maxFiles === 1 ? "grid-cols-1" : "grid-cols-2 md:grid-cols-3")}>
                     <AnimatePresence>
+                        {existingUrls.map((url, idx) => (
+                            <motion.div
+                                key={"existing-" + idx}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="relative aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 group"
+                            >
+                                <img src={url} alt="preview" className="w-full h-full object-cover" />
+                                {onRemoveExisting && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); onRemoveExisting(url); }}
+                                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </motion.div>
+                        ))}
                         {value.map((file, idx) => (
                             <motion.div
                                 key={file.name + idx}
@@ -95,7 +117,6 @@ export function ImageUploader({ maxFiles = 1, value, onChange, label }: ImageUpl
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 className="relative aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 group"
                             >
-                                {/* URL.createObjectURL creates a safe, temporary local link for the browser to preview! */}
                                 <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
                                 <button
                                     type="button"

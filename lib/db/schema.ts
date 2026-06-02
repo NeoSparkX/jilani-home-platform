@@ -19,11 +19,13 @@ import { relations } from 'drizzle-orm';
 // 1. ENUMS
 // ==========================================
 export const roleEnum = pgEnum('role', ['admin', 'owner', 'user']);
-export const propertyTypeEnum = pgEnum('property_type', ['house', 'office', 'hall']);
+export const propertyTypeEnum = pgEnum('property_type', ['house', 'office', 'hall', 'apartment', 'studio', 'penthouse', 'villa', 'commercial']);
 export const propertyStatusEnum = pgEnum('property_status', ['pending', 'active', 'inactive', 'expired']);
 export const transactionStatusEnum = pgEnum('transaction_status', ['pending', 'success', 'failed']);
 export const inquiryStatusEnum = pgEnum('inquiry_status', ['pending', 'contacted', 'closed']);
 export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed_amount']); // NEW
+export const priceTypeEnum = pgEnum('price_type', ['hour', 'month', 'day', 'year', 'event', 'one-time']);
+
 
 // ==========================================
 // 2. USERS (The Wallet)
@@ -86,6 +88,9 @@ export const properties = pgTable('properties', {
 
     // NEW: Main cover image for fast UI loading
     coverImage: text('cover_image'),
+
+    slug: varchar('slug').unique().notNull(),
+    priceType: priceTypeEnum('price_type').default('month').notNull(),
 
     type: propertyTypeEnum('type').notNull(),
     price: decimal('price', { precision: 12, scale: 2 }).notNull(),
