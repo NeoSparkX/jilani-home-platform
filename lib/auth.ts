@@ -205,17 +205,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         .from(users)
                         .where(eq(users.email, user.email as string));
 
+                    // 🚨 1. BLOCK INITIAL LOGIN FOR DELETED GOOGLE USERS
+                    if (dbUser && dbUser.deletedAt !== null) {
+                        throw new Error("This account has been deactivated.");
+                    }
+
                     if (dbUser) {
                         token.id = dbUser.id;
                         token.phoneNumber = dbUser.phoneNumber;
-                        // FIX: Use dbUser.role, NOT user.role (Google doesn't provide a role)
                         token.role = dbUser.role;
                     }
                 } else {
                     // For Credentials provider (Email/Phone + Password)
+                    // (Assuming you already check deletedAt inside your authorize() function)
                     token.id = user.id;
                     token.phoneNumber = user.phoneNumber;
-                    // For credentials, 'user' comes from our authorize() function, so user.role exists
                     token.role = user.role;
                 }
             }
@@ -225,15 +229,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.phoneNumber = session.phoneNumber;
             }
 
+            // 🚨 2. INSTANTLY KICK OUT ACTIVE USERS IF DELETED MID-SESSION
+            // This runs on subsequent requests. We check if they were deleted while logged in.
+            if (token?.id) {
+                const [currentUser] = await db
+                    .select({ deletedAt: users.deletedAt }) // Only fetch what we need for performance
+                    .from(users)
+                    .where(eq(users.id, token.id));
+
+                // If the user doesn't exist anymore or was soft-deleted, destroy the token
+                if (!currentUser || currentUser.deletedAt !== null) {
+                    return null; // Returning null instantly logs the user out
+                }
+            }
+
             return token;
         },
 
         // 3. PASS TO BROWSER
         async session({ session, token }) {
+            // 🚨 Prevent mapping if the token was destroyed (user was deleted)
+            if (!token?.id) {
+                return session; // Returns unauthenticated state
+            }
+
             if (token && session.user) {
                 // Map our custom token data into the final session object
-                session.user.id = token.id as string;
-                session.user.phoneNumber = token.phoneNumber as string;
+                session.user.id = token.id;
+                session.user.phoneNumber = token.phoneNumber;
                 session.user.role = token.role;
             }
             return session;
