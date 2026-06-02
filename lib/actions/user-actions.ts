@@ -6,7 +6,7 @@ import sharp from "sharp";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/index";
 import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, or } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
@@ -182,5 +182,156 @@ export async function updatePassword(formData: FormData) {
     } catch (error) {
         console.error("Update error:", error);
         return { success: false, error: "Failed to update password" };
+    }
+}
+
+export async function fetchUsers(
+    page: number,
+    limit: number = 10,
+    search = "",
+    sortKey = "createdAt",
+    sortOrder = "desc",
+    filters: any = {}
+) {
+    const offset = (page - 1) * limit;
+
+    try {
+        let searchCondition = undefined;
+        if (search.trim() !== "") {
+            const term = `%${search.trim()}%`;
+            searchCondition = or(
+                ilike(users.name, term),
+                ilike(users.email, term),
+                ilike(users.phoneNumber, term)
+            );
+        }
+
+        const filterConditions = [];
+        if (filters.role && filters.role !== "all") {
+            filterConditions.push(eq(users.role, filters.role));
+        }
+
+        // 🚨 IMPORTANT: Always filter out soft-deleted users
+        const finalWhere = and(
+            isNull(users.deletedAt),
+            searchCondition,
+            ...filterConditions
+        );
+
+        let orderByColumn: any;
+        if (sortKey === 'name') orderByColumn = users.name;
+        else if (sortKey === 'email') orderByColumn = users.email;
+        else if (sortKey === 'pointsBalance') orderByColumn = users.pointsBalance;
+        else orderByColumn = users.createdAt;
+
+        const order: any = sortOrder === "desc" ? desc(orderByColumn) : asc(orderByColumn);
+
+        const data = await db
+            .select({
+                id: users.id,
+                name: users.name,
+                name_bn: users.name_bn,
+                email: users.email,
+                phoneNumber: users.phoneNumber,
+                role: users.role,
+                image: users.image,
+                pointsBalance: users.pointsBalance,
+                createdAt: users.createdAt,
+            })
+            .from(users)
+            .where(finalWhere)
+            .limit(limit + 1)
+            .orderBy(order)
+            .offset(offset);
+
+        const hasMore = data.length > limit;
+        const dataToReturn = hasMore ? data.slice(0, -1) : data;
+
+        return { data: dataToReturn, hasMore };
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to fetch users");
+    }
+}
+
+export async function createUser(formData: any) {
+    try {
+        const session = await auth();
+        if (session?.user?.role !== "admin") return { success: false, error: "Admin access required." };
+
+        // 🚨 SECURITY: Always hash passwords before storing them
+        // const hashedPassword = await bcrypt.hash(formData.password, 10);
+
+        await db.insert(users).values({
+            name: formData.name,
+            email: formData.email,
+            phoneNumber: formData.phoneNumber,
+            password: formData.password, // REPLACE with hashedPassword in production
+            role: formData.role,
+            pointsBalance: Number(formData.pointsBalance),
+        });
+
+        revalidatePath("/admin/users", "layout");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || "Failed to create user. Email or phone might already exist." };
+    }
+}
+
+export async function updateUser(id: string, formData: any) {
+    try {
+        const session = await auth();
+        if (session?.user?.role !== "admin") return { success: false, error: "Admin access required." };
+
+        await db.update(users)
+            .set({
+                name: formData.name,
+                email: formData.email,
+                phoneNumber: formData.phoneNumber,
+                role: formData.role,
+                pointsBalance: Number(formData.pointsBalance),
+            })
+            .where(eq(users.id, id));
+
+        revalidatePath("/admin/users", "layout");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || "Failed to update user." };
+    }
+}
+
+// 🚨 CHANGED: Soft Delete instead of hard delete
+export async function deleteUser(id: string) {
+    try {
+        const session = await auth();
+        if (session?.user?.role !== "admin") return { success: false, error: "Admin access required." };
+
+        await db.update(users)
+            .set({ deletedAt: new Date() }) // Soft delete
+            .where(eq(users.id, id));
+
+        revalidatePath("/admin/users", "layout");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || "Failed to delete user." };
+    }
+}
+
+// 🚨 CHANGED: Soft Delete Multiple instead of hard delete
+export async function deleteMultipleUsers(ids: string[]) {
+    try {
+        const session = await auth();
+        if (session?.user?.role !== "admin") return { success: false, error: "Admin access required." };
+
+        if (!ids || ids.length === 0) return { success: false, error: "No users provided." };
+
+        await db.update(users)
+            .set({ deletedAt: new Date() }) // Soft delete
+            .where(inArray(users.id, ids));
+
+        revalidatePath("/admin/users");
+        return { success: true, count: ids.length };
+    } catch (error: any) {
+        return { success: false, error: "Failed to delete users." };
     }
 }
