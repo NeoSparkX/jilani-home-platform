@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { properties, propertyImages, users, ownerContacts, propertyLocationsPrivate, zones } from "@/lib/db/schema";
-import { eq, desc, asc, or, ilike, inArray, and, isNull } from "drizzle-orm"; // 🚨 Make sure to import this!
+import { eq, desc, asc, or, ilike, inArray, and, isNull, arrayContains, gte, lte, ne, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { deleteFilesFromR2 } from "./uploads";
@@ -523,5 +523,235 @@ export async function bulkUpdatePropertyStatus(ids: string[], newStatus: 'pendin
         return { success: true, count: ids.length };
     } catch (error: any) {
         return { success: false, error: "Failed to update statuses." };
+    }
+}
+
+//==========================================
+// Homepage Featured Property Section
+//==========================================
+export async function getTopRatedProperties() {
+    try {
+        const data = await db
+            // 1. Explicitly select the property data AND the joined zone data
+            .select({
+                property: properties,
+                zone: {
+                    id: zones.id,
+                    name: zones.name,
+                    city: zones.city,
+                    thana: zones.thana,
+                    area: zones.area,
+                }
+            })
+            .from(properties)
+            // 2. Join the zones table where the IDs match
+            .leftJoin(zones, eq(properties.zoneId, zones.id))
+            .where(eq(properties.status, 'active'))
+            .orderBy(desc(properties.averageRating))
+            .limit(10);
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("Database error fetching top properties:", error);
+        return { success: false, data: [] };
+    }
+}
+
+//===========================================
+// LISTING PAGE QUERYING
+//===========================================
+// 1. Fetch distinct cities for the filter sidebar
+export async function getAvailableCities() {
+    try {
+        // Fetch unique cities that have active properties
+        const data = await db
+            .select({ city: zones.city })
+            .from(properties)
+            .leftJoin(zones, eq(properties.zoneId, zones.id))
+            .where(eq(properties.status, 'active'))
+            .groupBy(zones.city);
+
+        return { success: true, data: data.map(d => d.city).filter(Boolean) as string[] };
+    } catch (error) {
+        console.error("Failed to fetch cities:", error);
+        return { success: false, data: [] as string[] };
+    }
+}
+
+// 2. The new heavily optimized, paginated query
+export async function getPaginatedProperties(params: {
+    page: number;
+    limit: number;
+    search?: string;
+    type?: string;
+    city?: string;
+    minRooms?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    priceType?: string;
+    amenities?: string[];
+    sortBy?: string;
+}) {
+    const { page, limit, search, type, city, minRooms, minPrice, maxPrice, priceType, amenities, sortBy } = params;
+    const offset = (page - 1) * limit;
+
+    try {
+        const conditions: any[] = [eq(properties.status, 'active')];
+
+        // Search Match
+        if (search) {
+            conditions.push(
+                or(
+                    ilike(properties.title, `%${search}%`),
+                    ilike(zones.city, `%${search}%`),
+                    ilike(zones.name, `%${search}%`)
+                )
+            );
+        }
+
+        // Room Count Filter
+        if (minRooms && minRooms > 0) {
+            conditions.push(gte(properties.roomCount, minRooms));
+        }
+
+        // FIX 1: Exact Category Type Filter (Handle Enums correctly)
+        if (type && type !== 'All') {
+            // Convert "Office" to "office" to match the database enum strictly
+            let dbType = type.toLowerCase();
+            // Fallback mapper just in case the UI ever sends "Commercial Space"
+            if (dbType === 'commercial space') dbType = 'commercial';
+
+            conditions.push(eq(properties.type, dbType as any));
+        }
+
+        // Exact City Filter
+        if (city && city !== 'All Cities') {
+            conditions.push(eq(zones.city, city));
+        }
+
+        // Price Type Filter
+        if (priceType && priceType !== 'All') {
+            conditions.push(eq(properties.priceType, priceType as any));
+        }
+
+        // Price Min/Max Filter
+        if (minPrice && minPrice > 0) {
+            conditions.push(sql`${properties.price}::numeric >= ${minPrice}`);
+        }
+        if (maxPrice && maxPrice > 0) {
+            conditions.push(sql`${properties.price}::numeric <= ${maxPrice}`);
+        }
+
+        // FIX 2: Amenities Filter for JSONB column
+        if (amenities && amenities.length > 0) {
+            // Use PostgreSQL JSONB containment operator `@>`
+            // This checks if the database JSON array contains all elements of the provided JSON array
+            conditions.push(sql`${properties.amenities} @> ${JSON.stringify(amenities)}::jsonb`);
+        }
+
+        // Sorting
+        let orderBy = desc(properties.createdAt);
+        if (sortBy === 'Top Rated') orderBy = desc(properties.averageRating);
+
+        const data = await db
+            .select({
+                property: properties,
+                zone: { id: zones.id, name: zones.name, city: zones.city }
+            })
+            .from(properties)
+            .leftJoin(zones, eq(properties.zoneId, zones.id))
+            .where(and(...conditions))
+            .orderBy(orderBy)
+            .limit(limit)
+            .offset(offset);
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("Database error fetching paginated properties:", error);
+        return { success: false, data: [] };
+    }
+}
+
+
+//==========================================
+//      INDIVIDUAL PROPERTY QUERY
+//==========================================
+export async function getPropertyById(id: string) {
+    try {
+        // 1. Fetch the main property and zone
+        const data = await db
+            .select({
+                property: properties,
+                zone: {
+                    id: zones.id,
+                    name: zones.name,
+                    city: zones.city,
+                }
+            })
+            .from(properties)
+            .leftJoin(zones, eq(properties.zoneId, zones.id))
+            .where(eq(properties.id, id))
+            .limit(1);
+
+        if (data.length === 0) {
+            return { success: true, data: null };
+        }
+
+        const result = data[0];
+
+        // 2. Fetch the images for this specific property
+        const imagesData = await db
+            .select({ url: propertyImages.imageUrl })
+            .from(propertyImages)
+            .where(eq(propertyImages.propertyId, id));
+
+        const imageUrls = imagesData.map(img => img.url);
+
+        // 3. Return a NEW object to satisfy TypeScript. 
+        // This spreads the existing property columns and appends the images array.
+        return {
+            success: true,
+            data: {
+                property: {
+                    ...result.property,
+                    images: imageUrls
+                },
+                zone: result.zone
+            }
+        };
+    } catch (error) {
+        console.error("Database error fetching property by ID:", error);
+        return { success: false, data: null };
+    }
+}
+
+export async function getSimilarProperties(type: string, currentId: string) {
+    try {
+        const data = await db
+            .select({
+                property: properties,
+                zone: {
+                    id: zones.id,
+                    name: zones.name,
+                    city: zones.city,
+                }
+            })
+            .from(properties)
+            .leftJoin(zones, eq(properties.zoneId, zones.id))
+            .where(
+                and(
+                    eq(properties.status, 'active'),
+                    eq(properties.type, type as any),
+                    // Exclude the currently viewed property
+                    ne(properties.id, currentId)
+                )
+            )
+            .orderBy(desc(properties.createdAt))
+            .limit(3);
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("Database error fetching similar properties:", error);
+        return { success: false, data: [] };
     }
 }
