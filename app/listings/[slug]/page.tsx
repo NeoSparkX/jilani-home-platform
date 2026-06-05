@@ -1,0 +1,383 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
+import {
+  ArrowLeft, MapPin, Users, Star, Lock, CheckCircle2,
+  Wifi, Car, Wind, Mic2, Projector, UtensilsCrossed,
+  Phone, Mail, Shield, Sparkles, ChevronRight, Share2, Heart,
+  Calendar, Clock, Building2, Check, Home, Landmark, Building,
+  Briefcase, Castle, Store, Crown, Dumbbell, ShieldCheck, ArrowUpDown,
+  Sofa, Zap, Flame, Waves, Coffee, Cctv, HousePlus,
+  Refrigerator, Microwave, Tv, Flower
+} from 'lucide-react';
+
+// Components
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import PhotoGallery from '@/components/listings/individual/PhotoGallery';
+import TourRequestPanel from '@/components/listings/individual/TourRequestPanel';
+import SimilarListings from '@/components/listings/individual/SimilarListings';
+
+// Actions & Types
+import { getPropertyBySlug, getSimilarProperties } from '@/lib/actions/property-actions';
+import { Listing } from '@/types/listings';
+
+// ─── Amenity icon map ─────────────────────────────────────────────────────────
+const A_ICONS: Record<string, React.ReactNode> = {
+  'wifi': <Wifi className="w-3.5 h-3.5" />,
+  'parking': <Car className="w-3.5 h-3.5" />,
+  'ac': <Wind className="w-3.5 h-3.5" />,
+  'stage': <Mic2 className="w-3.5 h-3.5" />,
+  'projector': <Projector className="w-3.5 h-3.5" />,
+  'catering': <UtensilsCrossed className="w-3.5 h-3.5" />,
+  'gym': <Dumbbell className="w-3.5 h-3.5" />,
+  'security': <ShieldCheck className="w-3.5 h-3.5" />,
+  'cctv': <Cctv className="w-3.5 h-3.5" />,
+  'elevator': <ArrowUpDown className="w-3.5 h-3.5" />,
+  'furnished': <Sofa className="w-3.5 h-3.5" />,
+  'power backup': <Zap className="w-3.5 h-3.5" />,
+  'heating': <Flame className="w-3.5 h-3.5" />,
+  'swimming pool': <Waves className="w-3.5 h-3.5" />,
+  'kitchen': <Coffee className="w-3.5 h-3.5" />,
+  'tv': <Tv className="w-3.5 h-3.5" />,
+  'refrigerator': <Refrigerator className="w-3.5 h-3.5" />,
+  'microwave': <Microwave className="w-3.5 h-3.5" />,
+  'balcony': <Flower className="w-3.5 h-3.5" />,
+  'freeze': <Refrigerator className="w-3.5 h-3.5" />,
+  'other': <Check className="w-3.5 h-3.5" />, // Explicit "Other" mapping
+};
+
+type CardState = 'active' | 'visible' | 'hidden';
+
+const propertyTypes: Record<string, { Icon: () => React.ReactNode; bgColor: string; borderColor: string; textColor: string; text: string; }> = {
+  'house': {
+    Icon: () => <Home className="w-3.5 h-3.5" />,
+    bgColor: 'bg-purple-500/20',
+    borderColor: 'border-purple-500/40',
+    textColor: 'text-purple-400',
+    text: 'House'
+  },
+  'office': {
+    Icon: () => <Building2 className="w-3.5 h-3.5" />,
+    bgColor: 'bg-blue-500/20',
+    borderColor: 'border-blue-500/40',
+    textColor: 'text-blue-400',
+    text: 'Office'
+  },
+  'hall': {
+    Icon: () => <Landmark className="w-3.5 h-3.5" />,
+    bgColor: 'bg-green-500/20',
+    borderColor: 'border-green-500/40',
+    textColor: 'text-green-400',
+    text: 'Hall'
+  },
+  'apartment': {
+    Icon: () => <Building className="w-3.5 h-3.5" />,
+    bgColor: 'bg-orange-500/20',
+    borderColor: 'border-orange-500/40',
+    textColor: 'text-orange-400',
+    text: 'Apartment'
+  },
+  'commercial': {
+    Icon: () => <Briefcase className="w-3.5 h-3.5" />,
+    bgColor: 'bg-yellow-500/20',
+    borderColor: 'border-yellow-500/40',
+    textColor: 'text-yellow-400',
+    text: 'Commercial Space'
+  },
+  'studio': {
+    Icon: () => <Sofa className="w-3.5 h-3.5" />,
+    bgColor: 'bg-pink-500/20',
+    borderColor: 'border-pink-500/40',
+    textColor: 'text-pink-400',
+    text: 'Studio'
+  },
+  'villa': {
+    Icon: () => <Castle className="w-3.5 h-3.5" />,
+    bgColor: 'bg-teal-500/20',
+    borderColor: 'border-teal-500/40',
+    textColor: 'text-teal-400',
+    text: 'Villa'
+  },
+  'shop': {
+    Icon: () => <Store className="w-3.5 h-3.5" />,
+    bgColor: 'bg-indigo-500/20',
+    borderColor: 'border-indigo-500/40',
+    textColor: 'text-indigo-400',
+    text: 'Shop'
+  },
+  'penthouse': {
+    Icon: () => <Crown className="w-3.5 h-3.5" />,
+    bgColor: 'bg-cyan-500/20',
+    borderColor: 'border-cyan-500/40',
+    textColor: 'text-cyan-400',
+    text: 'Penthouse'
+  },
+};
+
+function TakaDisplay(amount: number) {
+  const formattedTaka = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'BDT',
+    maximumFractionDigits: 0 // Removes decimal points (.00) if not needed
+  }).format(amount);
+
+  return formattedTaka;
+}
+
+const AMENITY_LABELS: Record<string, string> = {
+  'wifi': "High Speed Wifi",
+  'parking': "Parking Available",
+  'ac': "Air Conditioning",
+  'stage': "Professional Stage",
+  'projector': "Projector & Screen",
+  'catering': "Catering Service",
+  'gym': "Gym",
+  'security': "Security",
+  'cctv': "CCTV",
+  'elevator': "Elevator",
+  'furnished': "Furnished",
+  'power backup': "Power Backup",
+  'heating': "Heating",
+  'swimming pool': "Swimming Pool",
+  'kitchen': "Kitchen",
+  'tv': "TV",
+  'refrigerator': "Refrigerator",
+  'microwave': "Microwave",
+  'balcony': "Balcony",
+  'freeze': "Fridge",
+};
+
+type DetailListing = Listing & { images: string[] };
+
+export default function ListingDetail() {
+  const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+
+  const [listing, setListing] = useState<DetailListing | null>(null);
+  const [similar, setSimilar] = useState<Listing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    async function fetchDetail() {
+      setIsLoading(true);
+      try {
+        const { data: propData } = await getPropertyBySlug(slug);
+
+        if (propData) {
+          const item = propData;
+          const mappedListing: DetailListing = {
+            id: item.property.id.toString(),
+            slug: item.property.slug,
+            title: item.property.title,
+            image: item.property.coverImage || 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800',
+            images: Array.isArray(item.property.images) && item.property.images.length > 0
+              ? item.property.images
+              : [item.property.coverImage || 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800'],
+            type: item.property.type || 'House',
+            area: item.zone?.name || 'Unknown Area',
+            city: item.zone?.city || 'Unknown City',
+            description: item.property.description || 'No description provided.',
+            roomCount: item.property.roomCount || 0,
+            capacity: item.property.roomCount ? item.property.roomCount * 2 : 50,
+            rating: Number(item.property.averageRating) || 0,
+            reviews: Number(item.property.totalReviews) || 0,
+            price: `৳ ${item.property.price}`,
+            priceType: item.property.priceType,
+            amenities: Array.isArray(item.property.amenities) ? item.property.amenities : ['WiFi'],
+            verified: item.property.status === 'active',
+            tag: Number(item.property.averageRating) >= 4.5 ? 'Top Rated' : null,
+          };
+
+          setListing(mappedListing);
+
+          const { data: simData } = await getSimilarProperties(item.property.type, propData.property.id);
+          const mappedSimilar: Listing[] = simData.map((s: any) => ({
+            id: s.property.id.toString(), title: s.property.title,
+            slug: s.property.slug,
+            image: s.property.coverImage || 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800',
+            type: s.property.type === 'office' ? 'Office Space' : 'Convention Hall',
+            area: s.zone?.name || 'Unknown Area', city: s.zone?.city || 'Unknown City',
+            description: s.property.description || '', capacity: s.property.roomCount ? s.property.roomCount * 2 : 50,
+            rating: Number(s.property.averageRating) || 0, reviews: Number(s.property.totalReviews) || 0,
+            price: `৳ ${s.property.price}`, amenities: Array.isArray(s.property.amenities) ? s.property.amenities : [],
+            verified: s.property.status === 'active', tag: null
+          }));
+          setSimilar(mappedSimilar);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    if (slug) fetchDetail();
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-[#3B82F6] animate-pulse font-['Space_Grotesk'] text-xl">Loading Property...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!listing) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0D] text-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <Building2 className="w-16 h-16 text-gray-700" />
+          <h2 className="font-['Space_Grotesk'] text-2xl font-bold">Listing not found</h2>
+          <Link href="/listings" className="mt-2 flex items-center gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
+            <ArrowLeft className="w-4 h-4" /> Back to Listings
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0D0D0D] text-white font-['Inter'] overflow-x-hidden">
+      <Navbar />
+
+      {/* ── Page header ── */}
+      <div className="border-b border-white/[0.06] px-[0px] pt-[105px] pb-[24px]">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-2">
+                <Link href="/" className="hover:text-white transition-colors">Home</Link> <ChevronRight className="w-3 h-3" />
+                <Link href="/listings" className="hover:text-white transition-colors">Listings</Link> <ChevronRight className="w-3 h-3" />
+                <span className="text-gray-400 truncate max-w-[200px]">{listing.title}</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-md border flex items-center ${propertyTypes[listing.type]?.bgColor || 'bg-gray-500/20 border-gray-500/40 text-gray-400'}`}>
+                  {propertyTypes[listing.type]?.Icon?.()} <span className='ml-2'>{propertyTypes[listing.type]?.text}</span>
+                </span>
+
+                {listing.verified && <span className="flex items-center gap-1 text-xs text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/20 px-2.5 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" /> Verified</span>}
+                {listing.tag && <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white"><Sparkles className="w-3 h-3 text-[#F59E0B]" /> {listing.tag}</span>}
+              </div>
+
+              <h1 className="font-['Space_Grotesk'] text-2xl md:text-3xl font-bold text-white">{listing.title}</h1>
+              <p className="flex items-center gap-1.5 text-gray-400 text-sm mt-1"><MapPin className="w-3.5 h-3.5 text-gray-500 shrink-0" /> {listing.area}, {listing.city}</p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => router.back()} className="flex items-center gap-1.5 bg-[#141414] border border-white/[0.08] text-gray-300 hover:text-white text-sm px-4 py-2 rounded-xl transition-all hover:border-white/20"><ArrowLeft className="w-4 h-4" /> Back</button>
+              <button onClick={() => setSaved(s => !s)} className={`flex items-center gap-1.5 bg-[#141414] border text-sm px-4 py-2 rounded-xl transition-all ${saved ? 'border-red-500/40 text-red-400' : 'border-white/[0.08] text-gray-300 hover:text-white hover:border-white/20'}`}>
+                <Heart className={`w-4 h-4 ${saved ? 'fill-red-400' : ''} transition-all`} /> {saved ? 'Saved' : 'Save'}
+              </button>
+              <button className="flex items-center gap-1.5 bg-[#141414] border border-white/[0.08] text-gray-300 hover:text-white text-sm px-4 py-2 rounded-xl transition-all hover:border-white/20"><Share2 className="w-4 h-4" /> Share</button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ── Main Content ── */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+
+          <div className="flex-1 min-w-0 space-y-6">
+            <PhotoGallery images={listing.images} title={listing.title} />
+
+            {/* Quick stats */}
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.12 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { icon: <Star className="w-4 h-4 fill-[#F59E0B] text-[#F59E0B]" />, label: `${listing.rating} rating`, sub: `${listing.reviews} reviews` },
+                { icon: <HousePlus className="w-4 h-4 text-[#3B82F6]" />, label: `Up to ${listing.roomCount}`, sub: 'Rooms' },
+                { icon: <Clock className="w-4 h-4 text-[#3B82F6]" />, label: `${listing.priceType === 'year' ? 'Yearly' : listing.priceType === 'month' ? 'Monthly' : listing.priceType === 'day' ? 'Daily' : 'Negotiable'} Booking`, sub: 'flexible booking' },
+                { icon: <Calendar className="w-4 h-4 text-[#3B82F6]" />, label: 'Available now', sub: 'request a tour' },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-3 bg-[#111111] border border-white/[0.07] rounded-xl px-4 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#3B82F6]/10 flex items-center justify-center shrink-0">{s.icon}</div>
+                  <div><p className="text-white text-sm font-medium">{s.label}</p><p className="text-gray-500 text-xs">{s.sub}</p></div>
+                </div>
+              ))}
+            </motion.div>
+
+            {/* Description */}
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.16 }} className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6">
+              <h2 className="font-['Space_Grotesk'] text-white font-semibold mb-3">About This Space</h2>
+              <p className="text-gray-400 leading-relaxed whitespace-pre-wrap">{listing.description}</p>
+            </motion.div>
+
+            {/* Amenities */}
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6">
+              <h2 className="font-['Space_Grotesk'] text-white font-semibold mb-4">Amenities & Features</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {listing.amenities.map(a => (
+                  <div key={a} className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] shrink-0">{A_ICONS[a.toLowerCase()] || <Check className="w-4 h-4" />}</div>
+                    <span className="text-gray-300 text-sm">{AMENITY_LABELS[a.toLowerCase()] ?? a}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Location */}
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.24 }} className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6">
+              <h2 className="font-['Space_Grotesk'] text-white font-semibold mb-3">Location</h2>
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] shrink-0 mt-0.5"><MapPin className="w-4 h-4" /></div>
+                <div>
+                  <p className="text-white font-medium">{listing.area}, {listing.city}</p>
+                  <p className="text-gray-500 text-sm mt-0.5">Approximate area shown. Unlock contact info to get the exact street address.</p>
+                </div>
+              </div>
+              <div className="h-36 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center overflow-hidden relative">
+                <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.015)_0px,rgba(255,255,255,0.015)_1px,transparent_1px,transparent_16px)]" />
+                <div className="flex flex-col items-center gap-2 text-gray-600 relative z-10"><MapPin className="w-6 h-6 text-[#3B82F6]/40" /><span className="text-sm">Exact map unlocked after sign-up</span></div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── Right Column ── */}
+          <div className="w-full lg:w-80 shrink-0 self-start sticky top-24 space-y-4">
+            <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, delay: 0.1 }} className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6">
+              <div className="mb-3"><span className="text-gray-500 text-xs block mb-1">Starting from</span><span className="font-['Space_Grotesk'] text-3xl font-bold text-white">{listing.price}
+                <span className='text-sm text-gray-400'> ({listing.priceType === 'year' ? 'per year' : listing.priceType === 'month' ? 'per month' : listing.priceType === 'day' ? 'per day' : 'One Time'})</span></span></div>
+              <div className="flex items-center gap-2 mb-5"><Star className="w-4 h-4 fill-[#F59E0B] text-[#F59E0B]" /><span className="text-white font-medium">{listing.rating}</span><span className="text-gray-500 text-sm">({listing.reviews} reviews)</span></div>
+
+              <div className="relative rounded-xl bg-white/[0.03] border border-white/[0.07] overflow-hidden mb-4">
+                <div className="p-4 space-y-3 blur-[5px] select-none pointer-events-none opacity-50">
+                  <div className="flex items-center gap-2.5 text-gray-400 text-sm"><MapPin className="w-4 h-4 shrink-0" /><span>House 12, Road 6, {listing.area.split(',')[0]}</span></div>
+                  <div className="flex items-center gap-2.5 text-gray-400 text-sm"><Phone className="w-4 h-4 shrink-0" /><span>+880 1711-234567</span></div>
+                  <div className="flex items-center gap-2.5 text-gray-400 text-sm"><Mail className="w-4 h-4 shrink-0" /><span>contact@venue.com</span></div>
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0D0D0D]/65 backdrop-blur-[2px] gap-2 p-4">
+                  <div className="flex items-center gap-1.5 text-gray-400 text-xs text-center"><Lock className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" /><span>Exact address & contacts are hidden</span></div>
+                  <Link href="/signup" className="w-full">
+                    <button className="w-full flex items-center justify-center gap-1.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-all shadow-[0_0_14px_rgba(59,130,246,0.35)]"><Shield className="w-4 h-4" /> Unlock Contact Info</button>
+                  </Link>
+                </div>
+              </div>
+              <p className="text-gray-600 text-xs text-center">One-time access fee · Cancel anytime</p>
+            </motion.div>
+
+            <TourRequestPanel listingTitle={listing.title} />
+
+            <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, delay: 0.3 }} className="bg-[#3B82F6]/[0.07] border border-[#3B82F6]/20 rounded-2xl p-4">
+              <div className="flex items-start gap-3"><Lock className="w-4 h-4 text-[#3B82F6] shrink-0 mt-0.5" /><p className="text-gray-400 text-xs leading-relaxed">Price, capacity, amenities and approximate location are <span className="text-white">free to view</span>. Sign up once to unlock the exact address, phone number and email.</p></div>
+            </motion.div>
+          </div>
+        </div>
+
+        <SimilarListings similar={similar} />
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
