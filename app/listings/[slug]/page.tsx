@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   ArrowLeft, MapPin, Users, Star, Lock, CheckCircle2,
   Wifi, Car, Wind, Mic2, Projector, UtensilsCrossed,
-  Phone, Mail, Shield, Sparkles, ChevronRight, Share2,
+  Phone, Mail, Shield, Sparkles, ChevronRight, Share2, Heart,
   Calendar, Clock, Building2, Check, Home, Landmark, Building,
   Briefcase, Castle, Store, Crown, Dumbbell, ShieldCheck, ArrowUpDown,
   Sofa, Zap, Flame, Waves, Coffee, Cctv, HousePlus,
@@ -18,11 +18,14 @@ import TourRequestPanel from '@/components/listings/individual/TourRequestPanel'
 import SimilarListings from '@/components/listings/individual/SimilarListings';
 import SaveButton from '@/components/listings/SaveButton';
 import ShareButton from '@/components/listings/individual/ShareButton';
+import ReviewSection from '@/components/listings/individual/ReviewSection';
 
 // Actions & Types
 import { getPropertyBySlug, getSimilarProperties } from '@/lib/actions/property-actions';
 import { checkIfPropertyIsSaved } from '@/lib/actions/save-actions';
+import { checkUserUnlockedProperty } from '@/lib/actions/review-actions';
 import { Listing } from '@/types/listings';
+import { auth } from '@/lib/auth';
 
 // ─── Amenity icon map ─────────────────────────────────────────────────────────
 const A_ICONS: Record<string, React.ReactNode> = {
@@ -69,16 +72,31 @@ const AMENITY_LABELS: Record<string, string> = {
   'refrigerator': "Refrigerator", 'microwave': "Microwave", 'balcony': "Balcony", 'freeze': "Fridge",
 };
 
+function TakaDisplay(amount: number) {
+  // return new Intl.NumberFormat('en-US', {
+  //   style: 'currency',
+  //   currency: 'BDT',
+  //   maximumFractionDigits: 0
+  // }).format(amount);
+  return `৳ ${amount}`
+}
+
 type DetailListing = Listing & { images: string[] };
 
-export default async function ListingDetail({ params }: { params: { slug: string } }) {
-  // 1. Fetch data directly on the server
+export default async function ListingDetail(props: { params: Promise<{ slug: string }> }) {
+  // 1. Next.js 15: Await the params Promise
+  const params = await props.params;
+
+  // 2. Fetch data directly on the server
   const { data: propData } = await getPropertyBySlug(params.slug);
 
-  // 2. Trigger 404 if not found
   if (!propData) {
     return notFound();
   }
+
+  // 3. Get User Session
+  const session = await auth();
+  const isLoggedIn = !!session?.user?.id;
 
   const item = propData;
   const listing: DetailListing = {
@@ -97,16 +115,17 @@ export default async function ListingDetail({ params }: { params: { slug: string
     capacity: item.property.roomCount ? item.property.roomCount * 2 : 50,
     rating: Number(item.property.averageRating) || 0,
     reviews: Number(item.property.totalReviews) || 0,
-    price: `৳ ${item.property.price}`,
+    price: TakaDisplay(Number(item.property.price)), // Using your TakaDisplay helper!
     priceType: item.property.priceType,
     amenities: Array.isArray(item.property.amenities) ? item.property.amenities : ['WiFi'],
     verified: item.property.status === 'active',
     tag: Number(item.property.averageRating) >= 4.5 ? 'Top Rated' : null,
   };
 
-  // 3. Check save status and fetch similar properties concurrently
-  const [isCurrentlySaved, { data: simData }] = await Promise.all([
+  // 4. Fetch the boolean states and similar properties concurrently for speed
+  const [isCurrentlySaved, hasUnlocked, { data: simData }] = await Promise.all([
     checkIfPropertyIsSaved(listing.id),
+    checkUserUnlockedProperty(listing.id),
     getSimilarProperties(item.property.type, item.property.id)
   ]);
 
@@ -118,7 +137,8 @@ export default async function ListingDetail({ params }: { params: { slug: string
     area: s.zone?.name || 'Unknown Area', city: s.zone?.city || 'Unknown City',
     description: s.property.description || '', capacity: s.property.roomCount ? s.property.roomCount * 2 : 50,
     rating: Number(s.property.averageRating) || 0, reviews: Number(s.property.totalReviews) || 0,
-    price: `৳ ${s.property.price}`, amenities: Array.isArray(s.property.amenities) ? s.property.amenities : [],
+    price: TakaDisplay(Number(s.property.price)),
+    amenities: Array.isArray(s.property.amenities) ? s.property.amenities : [],
     verified: s.property.status === 'active', tag: null
   }));
 
@@ -141,7 +161,7 @@ export default async function ListingDetail({ params }: { params: { slug: string
 
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-md border flex items-center ${propType.bgColor} ${propType.borderColor} ${propType.textColor}`}>
-                  {propType.Icon()} <span className='ml-2'>{propType.text}</span>
+                  {propType.Icon && propType.Icon()} <span className='ml-2'>{propType.text}</span>
                 </span>
 
                 {listing.verified && <span className="flex items-center gap-1 text-xs text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/20 px-2.5 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" /> Verified</span>}
@@ -161,6 +181,7 @@ export default async function ListingDetail({ params }: { params: { slug: string
 
               {/* Server-Injected Save Button */}
               <SaveButton propertyId={listing.id} initialSavedState={isCurrentlySaved} styleType="detail" />
+
               <ShareButton title={listing.title} />
             </div>
           </div>
@@ -222,6 +243,17 @@ export default async function ListingDetail({ params }: { params: { slug: string
                 <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.015)_0px,rgba(255,255,255,0.015)_1px,transparent_1px,transparent_16px)]" />
                 <div className="flex flex-col items-center gap-2 text-gray-600 relative z-10"><MapPin className="w-6 h-6 text-[#3B82F6]/40" /><span className="text-sm">Exact map unlocked after sign-up</span></div>
               </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="mt-10">
+              <ReviewSection
+                propertyId={listing.id}
+                averageRating={listing.rating}
+                totalReviews={listing.reviews}
+                isLoggedIn={isLoggedIn}
+                hasUnlocked={hasUnlocked}
+              />
             </div>
           </div>
 

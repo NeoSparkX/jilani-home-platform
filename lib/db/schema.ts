@@ -294,22 +294,22 @@ export const sessions = pgTable("session", {
 //============================================
 //      PROPERTY REVIEW
 //============================================
-export const reviews = pgTable('property_reviews', {
+export const propertyReviews = pgTable('property_reviews', {
     id: uuid('id').defaultRandom().primaryKey(),
-    propertyId: uuid('property_id')
-        .references(() => properties.id, { onDelete: 'cascade' }).notNull(),
-    userId: uuid('user_id')
-        .references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }).notNull(),
 
-    rating: integer('rating').notNull(), // Star rating (1 to 5)
-    message: text('message'),            // Optional review text
+    // CRITICAL: 'set null' ensures if the user deletes their account, the review stays!
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+
+    rating: integer('rating').notNull(), // 1 to 5
+    message: text('message'),
+
+    // Approval system: 'pending', 'approved', 'rejected'
+    status: varchar('status', { enum: ['pending', 'approved', 'rejected'] }).default('pending').notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
-}, (table) => ({
-    // 🚨 1. The Magic Constraint: Ensures a user can only review a property ONCE
-    unq: unique().on(table.propertyId, table.userId),
-
-    // 🚨 2. Database-level validation: Ensures rating is strictly 1-5
-    ratingCheck: check('rating_check', sql`${table.rating} >= 1 AND ${table.rating} <= 5`)
+}, (t) => ({
+    // Enforce 1 review per user per property
+    unq: unique().on(t.userId, t.propertyId)
 }));
