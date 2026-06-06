@@ -102,11 +102,13 @@ export async function getSavedProperties() {
                 unlockedId: unlocks.id
             })
             .from(properties)
-            .leftJoin(savedProperties, eq(savedProperties.userId, userId as string))
+            .innerJoin(savedProperties, and(
+                eq(savedProperties.propertyId, properties.id),
+                eq(savedProperties.userId, userId as string)
+            ))
             // 2. Join the zones table where the IDs match
             .leftJoin(zones, eq(properties.zoneId, zones.id))
             .leftJoin(unlocks, unlockJoinCondition)
-            .where(eq(properties.status, 'active'))
             .orderBy(desc(savedProperties.createdAt));
 
         const finalData: any[] = [];
@@ -132,5 +134,29 @@ export async function getSavedProperties() {
     } catch (error) {
         console.error("Database error fetching top properties:", error);
         return { success: false, data: [] };
+    }
+}
+
+export async function deleteSavedProperty(propertyId: string) {
+    try {
+        const session = await auth();
+        const userId = session?.user?.id;
+
+        if (!userId) {
+            return { success: false, error: "UNAUTHORIZED" };
+        }
+
+        await db.delete(savedProperties).where(
+            and(
+                eq(savedProperties.userId, userId),
+                eq(savedProperties.propertyId, propertyId)
+            )
+        );
+
+        revalidatePath('/dashboard/saved');
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting saved property:", error);
+        return { success: false, error: "DATABASE_ERROR" };
     }
 }

@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { PropertyCard } from "./PropertyCard"; // Ensure PropertyCard is in the same directory
 
+import { deleteSavedProperty } from "@/lib/actions/save-actions";
+import { toast } from "sonner";
+
 // Define and export the shape of your property data
 export interface SavedProperty {
   data: {
@@ -55,9 +58,20 @@ export function SavedPropertyList({ initialItems }: SavedPropertyListProps) {
   const [items, setItems] = useState<SavedProperty[]>(initialItems);
 
   // Explicitly type the id, prev array, and individual property 'p'
-  const remove = (id: string) =>
+  const remove = async (id: string) => {
     setItems((prev: SavedProperty[]) => prev.filter((p: SavedProperty) => p.data.id !== id));
-
+    try {
+      const res = await deleteSavedProperty(id);
+      if (res?.success) {
+        toast.success("Property removed from saved");
+      } else {
+        toast.error("Failed to remove property from saved");
+      }
+    } catch (error) {
+      console.error("Error removing property from saved:", error);
+      toast.error("Failed to remove property from saved");
+    }
+  }
   return (
     <div className="w-full space-y-6">
       <div className="space-y-1">

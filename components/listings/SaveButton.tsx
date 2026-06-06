@@ -23,24 +23,29 @@ export default function SaveButton({ propertyId, initialSavedState = false, styl
         e.stopPropagation();
 
         setIsLoading(true);
-        const result = await toggleSaveProperty(propertyId);
+        try {
+            const result = await toggleSaveProperty(propertyId);
 
-        if (!result.success) {
-            if (result.error === "UNAUTHORIZED") {
-                setShowAuthModal(true); // Trigger the popup!
+            if (!result?.success) {
+                if (result?.error === "UNAUTHORIZED") {
+                    setShowAuthModal(true); // Trigger the popup!
+                } else {
+                    toast.error("Something went wrong. Please try again.");
+                }
             } else {
-                toast.error("Something went wrong. Please try again.");
+                // Success! Update local state and show toast
+                setIsSaved(result.isSaved ?? false);
+                if (result.isSaved) {
+                    toast.success(result.message);
+                } else {
+                    toast.info(result.message);
+                }
             }
-        } else {
-            // Success! Update local state and show toast
-            setIsSaved(result.isSaved ?? false);
-            if (result.isSaved) {
-                toast.success(result.message);
-            } else {
-                toast.info(result.message);
-            }
+        } catch (err) {
+            toast.error("An unexpected error occurred. Please try again.");
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     // Styling based on where the button is used
