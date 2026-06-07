@@ -72,9 +72,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const brandGradient = "from-[#3B82F6] to-[#60A5FA]";
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full p-6">
+    <div className="flex flex-col h-full p-6 overflow-hidden">
       {/* Brand */}
-      <div className="flex items-center gap-3 mb-10">
+      <div className="flex items-center gap-3 mb-10 flex-shrink-0">
         <div className={cn(
           "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg shadow-blue-500/20",
           brandGradient
@@ -92,13 +92,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1.5">
+      <nav className="flex-1 overflow-y-auto space-y-1.5 pr-2 pb-4 scrollbar-thin">
         <p className="text-[11px] font-bold tracking-[0.1em] text-gray-400 dark:text-gray-500 uppercase px-3 mb-4">
           Main Menu
         </p>
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = pathname === link.path || (link.path !== "/dashboard" && link.path !== "/admindashboard" && pathname.startsWith(link.path));
+          const isActive = pathname === link.path || (link.path !== "/dashboard" && link.path !== "/admin" && pathname.startsWith(link.path));
           return (
             <Link
               key={link.name}
@@ -125,7 +125,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </nav>
 
       {/* Bottom user section */}
-      <div className="pt-6 border-t border-gray-100 dark:border-white/10 mt-6 space-y-5">
+      <div className="pt-6 border-t border-gray-100 dark:border-white/10 mt-6 space-y-5 flex-shrink-0">
         <div className="flex items-center gap-3 px-2">
           <img
             src={user?.image || '/avatar-default.png'}
