@@ -3,6 +3,7 @@
 import { db } from "@/lib/db/index";
 import { auth } from "@/lib/auth";
 import { users, verificationTokens } from "@/lib/db/schema";
+import { sendSMS } from "@/lib/sms";
 import { eq, and, gte } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -33,34 +34,23 @@ export async function sendPhoneOTP(phoneNumber: string) {
             expires: expiresAt,
         });
 
-        // 5. The Delivery (Mock Strategy for Development vs Production)
-        if (process.env.NODE_ENV === "development") {
-            // In development, we DO NOT send a real SMS to save money[cite: 456, 457].
-            console.log(`\n=============================`);
-            console.log(`🚀 MOCK SMS SENT!`);
-            console.log(`📱 To: ${phoneNumber}`);
-            console.log(`🔑 Code: ${otpCode}`);
-            console.log(`=============================\n`);
-        } else {
-            const SMSNOC_API_URL = "https://api.smsnoc.com/v3/sms/send";
-            const SMSNOC_API_TOKEN = process.env.SMSNOC_API_TOKEN;
+        const message = `Your Jilani Home verification code is: ${otpCode}. It will expire in 5 minutes.`;
 
-            const response = await fetch(SMSNOC_API_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${SMSNOC_API_TOKEN}`,
-                },
-                body: JSON.stringify({
-                    recipient: phoneNumber,
-                    message: `Your Jilani Home login code is ${otpCode}. It expires in 5 minutes.`,
-                    // sender_id: "JilaniHome" // Add this if you get a Masking ID later
-                }),
-            });
+        const smsResult = await sendSMS(phoneNumber, message);
 
-            if (!response.ok) {
-                throw new Error("Failed to send SMS via gateway.");
-            }
+        if (!smsResult.success) {
+            // If SMS failed, we should probably delete the token we just created
+            // so the user doesn't try to log in with a non-existent code.
+            await db
+                .delete(verificationTokens)
+                .where(eq(verificationTokens.identifier, phoneNumber));
+
+            // Return a user-friendly error. 
+            // In a real app, you might want to fallback to Email OTP here if available.
+            return {
+                success: false,
+                message: smsResult.error || "Failed to send verification code. Please try again or contact support."
+            };
         }
 
         return { success: true, message: "OTP sent successfully." };
@@ -328,7 +318,7 @@ export async function sendForgotPasswordOTP(identifier: string) {
 
         let normalizedIdentifier = identifier.trim();
         const isEmail = identifier.includes("@");
-        
+
         if (!isEmail) {
             normalizedIdentifier = identifier.replace(/[\s\-()+]/g, '');
             if (normalizedIdentifier.length !== 11) {
