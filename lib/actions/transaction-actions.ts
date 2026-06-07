@@ -87,13 +87,13 @@ export async function fetchTransactions(page: number, limit: number = 10, search
                 senderNumber: transactions.senderNumber,
                 paymentScreenshot: transactions.paymentScreenshot,
                 remark: transactions.remark,
-                
+
                 userName: users.name,
                 userEmail: users.email,
                 userPhone: users.phoneNumber,
-                
+
                 packageName: pointPackages.name,
-                
+
                 promoCode: promoCodes.code,
             })
             .from(transactions)
@@ -200,10 +200,10 @@ export async function submitCheckout(data: {
                         amountPaid = originalAmount - discountAmount;
                         finalPromoId = promo.id;
                     } else {
-                         return { success: false, error: "You have reached the maximum usage limit for this promo code." };
+                        return { success: false, error: "You have reached the maximum usage limit for this promo code." };
                     }
                 } else {
-                     return { success: false, error: "Promo code is invalid or expired." };
+                    return { success: false, error: "Promo code is invalid or expired." };
                 }
             } else {
                 return { success: false, error: "Promo code is inactive or invalid." };
@@ -215,12 +215,12 @@ export async function submitCheckout(data: {
         const year = date.getFullYear().toString().slice(2);
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const prefix = `${year}${month}`;
-        
+
         const existingThisMonth = await db.query.transactions.findMany({
             where: ilike(transactions.invoiceNumber, `${prefix}%`),
             columns: { id: true }
         });
-        
+
         const serialStr = (existingThisMonth.length + 1).toString().padStart(4, '0');
         const invoiceNumber = `${prefix}${serialStr}`;
 
@@ -236,7 +236,7 @@ export async function submitCheckout(data: {
             gateway: data.gateway,
             gatewayTrxId: data.gatewayTrxId,
             status: "pending",
-            
+
             invoiceNumber,
             senderNumber: data.senderNumber,
             paymentScreenshot: data.paymentScreenshot || null,
@@ -310,7 +310,7 @@ export async function updateTransactionStatus(id: string, status: "success" | "f
                 const promo = await db.query.promoCodes.findFirst({
                     where: eq(promoCodes.id, trx.promoCodeId)
                 });
-                
+
                 if (promo) {
                     await db.update(promoCodes)
                         .set({ timesUsed: (promo.timesUsed || 0) + 1 })
@@ -330,7 +330,7 @@ export async function updateTransactionStatus(id: string, status: "success" | "f
                 const promo = await db.query.promoCodes.findFirst({
                     where: eq(promoCodes.id, trx.promoCodeId)
                 });
-                
+
                 if (promo && (promo.timesUsed || 0) > 0) {
                     await db.update(promoCodes)
                         .set({ timesUsed: (promo.timesUsed || 0) - 1 })
@@ -377,7 +377,7 @@ export async function adminCreateTransaction(data: {
 
         let discountAmount = 0;
         let originalAmount = Number(pkg.price);
-        
+
         if (data.promoCodeId) {
             const promo = await db.query.promoCodes.findFirst({
                 where: eq(promoCodes.id, data.promoCodeId)
@@ -388,7 +388,7 @@ export async function adminCreateTransaction(data: {
                 } else {
                     discountAmount = Number(promo.discountValue);
                 }
-                
+
                 await db.update(promoCodes)
                     .set({ timesUsed: (promo.timesUsed || 0) + 1 })
                     .where(eq(promoCodes.id, promo.id));
@@ -399,12 +399,12 @@ export async function adminCreateTransaction(data: {
         const year = date.getFullYear().toString().slice(2);
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const prefix = `${year}${month}`;
-        
+
         const existingThisMonth = await db.query.transactions.findMany({
             where: ilike(transactions.invoiceNumber, `${prefix}%`),
             columns: { id: true }
         });
-        
+
         const serialStr = (existingThisMonth.length + 1).toString().padStart(4, '0');
         const invoiceNumber = `${prefix}${serialStr}`;
 
@@ -459,9 +459,9 @@ export async function searchUsersForManualAdd(query: string) {
             return { success: false, error: "User not found" };
         }
 
-        return { 
-            success: true, 
-            users: result.map(u => ({ id: u.id, name: u.name, email: u.email, phone: u.phoneNumber })) 
+        return {
+            success: true,
+            users: result.map(u => ({ id: u.id, name: u.name, email: u.email, phone: u.phoneNumber }))
         };
     } catch (error) {
         return { success: false, error: "Error searching user" };
@@ -518,13 +518,13 @@ export async function fetchUserTransactions(page: number, limit: number = 10, se
                 senderNumber: transactions.senderNumber,
                 paymentScreenshot: transactions.paymentScreenshot,
                 remark: transactions.remark,
-                
+
                 userName: users.name,
                 userEmail: users.email,
                 userPhone: users.phoneNumber,
-                
+
                 packageName: pointPackages.name,
-                
+
                 promoCode: promoCodes.code,
             })
             .from(transactions)
