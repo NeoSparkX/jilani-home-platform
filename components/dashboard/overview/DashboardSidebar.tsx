@@ -1,99 +1,97 @@
-﻿'use client';
-import React from "react";
-import { GlassCard } from "@/components/ui/GlassCard";
-import Link from "next/link";
-import { ArrowRight, Calendar, ShieldCheck, Star } from "lucide-react";
+'use client';
+import React, { useState } from "react";
+import { Zap, Bell, Ticket, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const OFFICE_IMG = "https://images.unsplash.com/photo-1640109390671-edce15340659?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcmVtaXVtJTIwb2ZmaWNlJTIwc3BhY2UlMjBpbnRlcmlvciUyMG1vZGVybnxlbnwxfHx8fDE3Nzc3MzE4NzJ8MA&ixlib=rb-4.1.0&q=80&w=1080";
-const HALL_IMG = "https://images.unsplash.com/photo-1763231575952-98244918f99b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBldmVudCUyMGhhbGwlMjBlbGVnYW50JTIwaW50ZXJpb3J8ZW58MXx8fHwxNzc3NzMxODczfDA&ixlib=rb-4.1.0&q=80&w=1080";
+export function DashboardSidebar({ packages, promo }: { packages: any[], promo: any }) {
+  const [selectedPkg, setSelectedPkg] = useState(packages.length > 0 ? packages[0].points : 1000);
 
-const RECOMMENDED = [
-  { id: 3, title: "Crystal Ballroom", loc: "Grand Central", price: "à§³1,200/day", type: "Event Hall", image: HALL_IMG },
-  { id: 4, title: "Nova Co-Working", loc: "Innovation Qtr", price: "à§³350/mo", type: "Office", image: OFFICE_IMG },
-];
-
-export function DashboardSidebar() {
   return (
-    <div className="space-y-8">
-      {/* Premium Status Card */}
-      <div className="relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden shadow-2xl group border border-white/5">
-        {/* Abstract Shapes */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl" />
+    <div className="space-y-6">
+      {/* Fast Top-Up Card */}
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-white/5 shadow-sm rounded-3xl p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center">
+            <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h3 className="font-bold text-gray-900 dark:text-white">Fast Top-Up</h3>
+        </div>
 
-        <div className="relative z-10">
-          <div className="bg-blue-600 w-12 h-12 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
-            <ShieldCheck className="w-7 h-7 text-white" />
+        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Choose Package</p>
+        <div className="space-y-2 mb-6">
+          {packages.length === 0 ? (
+            <p className="text-sm text-gray-500">No packages available.</p>
+          ) : packages.map((pkg) => (
+            <button
+              key={pkg.id || pkg.points}
+              onClick={() => setSelectedPkg(pkg.points)}
+              className={cn(
+                "w-full flex items-center justify-between p-3 rounded-xl border transition-all duration-300",
+                selectedPkg === pkg.points
+                  ? "bg-blue-50 dark:bg-blue-600/10 border-blue-500 text-blue-700 dark:text-white shadow-sm"
+                  : "bg-gray-50 dark:bg-white/[0.02] border-gray-100 dark:border-white/[0.05] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/[0.1] hover:bg-gray-100 dark:hover:bg-white/[0.04]"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-bold">{pkg.points} Points</span>
+                {pkg.isPopular && (
+                  <span className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border border-amber-200 dark:border-amber-500/30">
+                    POPULAR
+                  </span>
+                )}
+              </div>
+              <span className="font-bold">৳{pkg.price}</span>
+            </button>
+          ))}
+        </div>
+
+        <button className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+          Launch Checkout
+        </button>
+      </div>
+
+      {/* Active Promo Highlights */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/20 border border-purple-200 dark:border-purple-500/20 shadow-sm rounded-3xl p-6 group cursor-pointer">
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700" />
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+            <Ticket className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="flex items-center gap-2 mb-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400">Account Status</p>
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight">Premium Member</h2>
-          <p className="text-slate-400 mt-3 text-sm leading-relaxed font-medium">
-            You have full access to verified owner contacts and premium listing insights.
-          </p>
-          <div className="mt-8 pt-6 border-t border-white/5">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Member since Jan 2026</p>
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Promo Active</h4>
+            <p className="text-xs text-gray-600 dark:text-purple-200/70 mb-3 leading-relaxed">
+              Use code <strong className="text-purple-600 dark:text-purple-300">{promo.code}</strong> to get {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `৳${promo.discountValue}`} extra points on all packages today.
+            </p>
+            <div className="flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+              Claim Offer <ChevronRight className="w-3.5 h-3.5" />
+            </div>
           </div>
         </div>
       </div>
 
-      <GlassCard className="p-6 bg-white dark:bg-slate-800 border-gray-100 dark:border-white/5 shadow-sm">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10">
-              <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-            </span>
-            Recommended
-          </h3>
-          <Link href="/userdashboard/explore" className="text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-blue-700">
-            View all
-          </Link>
-        </div>
-        <div className="space-y-3">
-          {RECOMMENDED.map((rec) => (
-            <Link
-              key={rec.id}
-              href={`/listings/${rec.id}`}
-              className="group grid grid-cols-[86px_minmax(0,1fr)] gap-4 rounded-2xl border border-gray-100 bg-gray-50/70 p-2.5 transition-all hover:border-blue-500/30 hover:bg-blue-50/60 dark:border-white/5 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
-            >
-              <div className="relative h-20 overflow-hidden rounded-xl">
-                <img src={rec.image} alt={rec.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
-              </div>
-              <div className="flex min-w-0 items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="mb-1 inline-flex rounded-md bg-blue-600/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                    {rec.type}
-                  </span>
-                  <h4 className="truncate text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white">{rec.title}</h4>
-                  <p className="mt-1 truncate text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                    {rec.loc} / {rec.price}
-                  </p>
-                </div>
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm transition-all group-hover:bg-blue-600 group-hover:text-white dark:bg-white/5">
-                  <ArrowRight className="h-4 w-4" />
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </GlassCard>
-
-      <GlassCard className="p-8 bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-500/20 shadow-sm">
-        <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-blue-600" />
-          Viewings
+      {/* Quick System Alerts */}
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-white/5 shadow-sm rounded-3xl p-6">
+        <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
+          <Bell className="w-4 h-4 text-gray-400" />
+          System Alerts
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
-          You don't have any property viewings scheduled for this week.
-        </p>
-        <button className="w-full mt-6 py-3 rounded-xl border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 text-sm font-bold hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors">
-          Schedule Now
-        </button>
-      </GlassCard>
+        <div className="space-y-4">
+          <div className="flex gap-3">
+            <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] flex-shrink-0" />
+            <div>
+              <p className="text-sm text-gray-700 dark:text-gray-300">Points payment verified!</p>
+              <p className="text-[10px] font-bold text-gray-500 mt-0.5">2 HOURS AGO</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-2 h-2 mt-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] flex-shrink-0" />
+            <div>
+              <p className="text-sm text-gray-700 dark:text-gray-300">New premium flat listed in Gulshan.</p>
+              <p className="text-[10px] font-bold text-gray-500 mt-0.5">1 DAY AGO</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
