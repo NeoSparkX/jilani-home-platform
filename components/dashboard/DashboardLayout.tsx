@@ -61,7 +61,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "Transactions", path: "/admin/transactions", icon: BadgeDollarSign },
     { name: "Promo Code", path: "/admin/promos", icon: Ticket },
     { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
-    { name: "Verification", path: "/admin/verification", icon: CheckCircle },
     { name: "Settings", path: "/admin/settings", icon: Settings },
   ];
 
