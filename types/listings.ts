@@ -18,6 +18,7 @@ export type Listing = {
     rating: number;
     reviews: number;
     price: string;
+    viewsCount: number;
     amenities: string[];
     verified: boolean;
     tag: string | null;

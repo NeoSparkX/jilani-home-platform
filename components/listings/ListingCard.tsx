@@ -11,7 +11,8 @@ import {
     Calendar, Clock, Building2, Check, Home, Landmark, Building,
     Briefcase, Castle, Store, Crown, Dumbbell, ShieldCheck, ArrowUpDown,
     Sofa, Zap, Flame, Waves, Coffee, Cctv, HousePlus,
-    Refrigerator, Microwave, Tv, Flower
+    Refrigerator, Microwave, Tv, Flower,
+    Eye
 } from 'lucide-react';
 import { Listing } from '@/types/listings';
 import SaveButton from './SaveButton';
@@ -196,6 +197,11 @@ export default function ListingCard({
                             <span className="text-white text-sm font-medium">{listing.rating}</span>
                             <span className="text-gray-600 text-xs">{listing.reviews} rev.</span>
                         </div>
+                        <div className="flex flex-col items-center gap-0.5">
+                            <Eye className="w-4 h-4 text-[#3B82F6]" />
+                            <span className="text-white text-sm font-medium">{listing.viewsCount}</span>
+                            <span className="text-gray-600 text-xs">views</span>
+                        </div>
                     </div>
 
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 shrink-0 pt-3 sm:pt-0 border-t border-white/[0.06] sm:border-0">
@@ -253,9 +259,16 @@ export default function ListingCard({
 
             <div className="p-5 flex flex-col flex-1 gap-3">
                 <div>
-                    <div className="flex items-center gap-1.5 mb-1">
-                        {listing.verified && <CheckCircle2 className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />}
-                        <span className="text-gray-100 text-xs">Verified listing</span>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />
+                            <span className="text-gray-500 text-xs">Verified listing</span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-[#0D0D0D]/80 border border-[#3B82F6] backdrop-blur-md rounded-lg px-2 py-1 z-20">
+                            <Eye className="w-3 h-3 text-[#3B82F6]" />
+                            <span className="text-white text-xs font-semibold">{listing.viewsCount ?? 0}</span>
+                            <span className="text-gray-400 text-xs">views</span>
+                        </div>
                     </div>
                     <h3 className="font-['Space_Grotesk'] text-white font-semibold leading-snug group-hover:text-[#3B82F6] transition-colors line-clamp-1">{listing.title}</h3>
                     <p className="text-gray-500 text-sm flex items-center gap-1 mt-1"><MapPin className="w-3.5 h-3.5 shrink-0 text-gray-600" />{listing.area}, {listing.city}</p>

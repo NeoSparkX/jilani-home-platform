@@ -8,7 +8,8 @@ import {
   Briefcase, Castle, Store, Crown, Dumbbell, ShieldCheck, ArrowUpDown,
   Sofa, Zap, Flame, Waves, Coffee, Cctv, HousePlus,
   Refrigerator, Microwave, Tv, Flower,
-  Ruler
+  Ruler,
+  Eye
 } from 'lucide-react';
 
 // Components
@@ -29,6 +30,7 @@ import { checkIfPropertyIsSaved } from '@/lib/actions/save-actions';
 import { Listing } from '@/types/listings';
 import { auth } from '@/lib/auth';
 import { getUserBalance } from '@/lib/actions/unlock-actions';
+import { trackPropertyView } from '@/lib/actions/view-actions';
 
 // ─── Amenity icon map ─────────────────────────────────────────────────────────
 const A_ICONS: Record<string, React.ReactNode> = {
@@ -92,6 +94,10 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
     return notFound();
   }
 
+  // Fire the tracking in the background asynchronously. 
+  // Notice there is NO 'await' here!
+  trackPropertyView(propData.property.id);
+
   // Fetch User Balance
   const userBalance = await getUserBalance();
 
@@ -122,6 +128,7 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
     rating: Number(item.property.averageRating) || 0,
     reviews: Number(item.property.totalReviews) || 0,
     price: TakaDisplay(Number(item.property.price)),
+    viewsCount: item.property.viewsCount || 0,
     priceType: item.property.priceType,
     amenities: Array.isArray(item.property.amenities) ? item.property.amenities : ['WiFi'],
     verified: item.property.status === 'active',
@@ -146,6 +153,7 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
     roomCount: s.property.roomCount || 0,
     rating: Number(s.property.averageRating) || 0, reviews: Number(s.property.totalReviews) || 0,
     price: TakaDisplay(Number(s.property.price)),
+    viewsCount: s.property.viewsCount || 0,
     amenities: Array.isArray(s.property.amenities) ? s.property.amenities : [],
     verified: s.property.status === 'active', tag: null
   }));
@@ -209,7 +217,7 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
                 { icon: <Star className="w-4 h-4 fill-[#F59E0B] text-[#F59E0B]" />, label: `${listing.rating} rating`, sub: `${listing.reviews} reviews` },
                 { icon: <HousePlus className="w-4 h-4 text-[#3B82F6]" />, label: `Up to ${listing.roomCount}`, sub: 'Rooms' },
                 { icon: <Ruler className="w-4 h-4 text-[#3B82F6]" />, label: `${listing.sizeSqft || 0} sqft`, sub: 'Big Space' },
-                { icon: <Clock className="w-4 h-4 text-[#3B82F6]" />, label: `${listing.priceType === 'year' ? 'Yearly' : listing.priceType === 'month' ? 'Monthly' : listing.priceType === 'day' ? 'Daily' : 'Negotiable'} Booking`, sub: 'flexible booking' },
+                { icon: <Eye className="w-4 h-4 text-[#3B82F6]" />, label: `${listing.viewsCount} views`, sub: 'Property Views' },
               ].map((s, i) => (
                 <div key={i} className="flex items-center gap-3 bg-[#111111] border border-white/[0.07] rounded-xl px-4 py-3">
                   <div className="w-8 h-8 rounded-lg bg-[#3B82F6]/10 flex items-center justify-center shrink-0">{s.icon}</div>

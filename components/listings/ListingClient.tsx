@@ -88,6 +88,7 @@ export default function ListingsClient({ isLoggedIn, userBalance, hideNavAndFoot
                 rating: Number(item.property.averageRating) || 0,
                 reviews: Number(item.property.totalReviews) || 0,
                 price: `৳ ${item.property.price}`,
+                viewsCount: item.property.viewsCount || 0,
                 amenities: Array.isArray(item.property.amenities) ? item.property.amenities : [],
                 verified: item.property.status === 'active',
                 tag: Number(item.property.averageRating) >= 4.5 ? 'Top Rated' : null,

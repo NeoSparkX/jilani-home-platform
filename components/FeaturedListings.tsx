@@ -12,7 +12,8 @@ import {
   Refrigerator,
   Microwave,
   Tv,
-  Flower
+  Flower,
+  Eye
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -202,9 +203,16 @@ function FeaturedCard({ property, state, isLoggedIn, userBalance }: { property: 
       {/* Body */}
       <div className="p-4 sm:p-5 flex flex-col flex-1 gap-3">
         <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            {property.status === "active" && <CheckCircle2 className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />}
-            <span className="text-gray-500 text-xs">Verified listing</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 mb-1">
+              {property.status === "active" && <CheckCircle2 className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />}
+              <span className="text-gray-500 text-xs">Verified listing</span>
+            </div>
+            <div className="flex items-center gap-1 bg-[#0D0D0D]/80 border border-[#3B82F6] backdrop-blur-md rounded-lg px-2 py-1 z-20">
+              <Eye className="w-3 h-3 text-[#3B82F6]" />
+              <span className="text-white text-xs font-semibold">{property.viewsCount ?? 0}</span>
+              <span className="text-gray-400 text-xs">views</span>
+            </div>
           </div>
           <h3 className="font-['Space_Grotesk'] text-white font-semibold leading-snug">
             {property.title}

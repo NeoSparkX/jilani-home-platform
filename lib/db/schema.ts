@@ -301,7 +301,7 @@ export const sessions = pgTable("session", {
 });
 
 //============================================
-//      PROPERTY REVIEW
+//  11. PROPERTY REVIEW
 //============================================
 export const propertyReviews = pgTable('property_reviews', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -322,3 +322,24 @@ export const propertyReviews = pgTable('property_reviews', {
     // Enforce 1 review per user per property
     unq: unique().on(t.userId, t.propertyId)
 }));
+
+// ==========================================
+// PROPERTY VIEW HISTORY (24-Hour Cooldown)
+// ==========================================
+export const propertyViewHistory = pgTable('property_view_history', {
+    id: serial('id').primaryKey(),
+    propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }).notNull(),
+
+    // Identifiers (One of these will be used)
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // Nullable for guests
+    ipAddress: varchar('ip_address'),
+
+    viewedAt: timestamp('viewed_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        // Indexes to make the 24-hour check query lightning fast
+        propUserIdx: index('prop_user_idx').on(table.propertyId, table.userId),
+        propIpIdx: index('prop_ip_idx').on(table.propertyId, table.ipAddress),
+        timeIdx: index('view_time_idx').on(table.viewedAt)
+    };
+});
