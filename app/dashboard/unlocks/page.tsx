@@ -2,6 +2,8 @@ import { UnlockedPropertyList } from "@/components/dashboard/unlocks/UnlockedPro
 import { getUnlockedProperties } from "@/lib/actions/unlock-actions";
 import { UnlockedProperty } from "@/components/dashboard/unlocks/UnlockedPropertyList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function UserUnlocksPage() {
   const { data, hasMore } = await getUnlockedProperties(1, 10);
 

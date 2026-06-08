@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { pointPackages, promoCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function TransactionsPage() {
   const transactions = await fetchTransactions(1, 10);
   const packages = await db.select().from(pointPackages).where(eq(pointPackages.isActive, true));

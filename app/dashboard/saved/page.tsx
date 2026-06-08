@@ -2,6 +2,8 @@ import { SavedPropertyList } from "@/components/dashboard/saved/SavedPropertyLis
 import { getSavedProperties } from "@/lib/actions/save-actions";
 import { SavedProperty } from "@/components/dashboard/saved/SavedPropertyList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function UserSavedPage() {
   const { data } = await getSavedProperties();
   // Being a Server Component, you can safely fetch database data here in the future

@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { fetchUserTransactions } from "@/lib/actions/transaction-actions";
 import { UserTransactionsClient } from "@/components/dashboard/transactions/UserTransactionsClient";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Your Transactions | NeoSparkX",
   description: "View your points and payment history.",
