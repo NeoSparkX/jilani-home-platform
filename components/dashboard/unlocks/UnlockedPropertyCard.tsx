@@ -186,7 +186,7 @@ export function UnlockedPropertyCard({ property, index }: PropertyCardProps) {
                                     className="flex-1 sm:flex-none h-12 px-6 rounded-xl bg-gray-900 dark:bg-[#1E293B] hover:bg-blue-600 dark:hover:bg-blue-600 border border-transparent dark:border-white/10 flex items-center justify-center gap-2 transition-all group/btn"
                                 >
                                     <ArrowRight className="w-4 h-4 text-white group-hover/btn:scale-110 transition-transform" />
-                                    <span className="text-xs font-bold text-white dark:text-slate-100 uppercase tracking-widest">View Details</span>
+                                    <span className="text-xs font-bold text-slate-100 dark:text-slate-100 uppercase tracking-widest">View Details</span>
                                 </button>
                             </div>
                         </div>
