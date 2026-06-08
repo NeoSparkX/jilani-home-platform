@@ -1,12 +1,11 @@
-// src/lib/email-template.ts
 
 export function getJilaniEmailTemplate(title: string, bodyContent: string) {
-    const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/imports/jilanihome_logo.png`;
-    const agencyLogoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/agency/neosparkx.jpeg`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/imports/jilanihome_logo.png`;
+  const agencyLogoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/agency/neosparkx.jpeg`;
 
-    const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
 
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="en">
     <head>

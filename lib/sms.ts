@@ -1,9 +1,9 @@
 export async function sendSMS(phone: string, message: string) {
     // 1. Sandbox configuration to protect your wallet balance in development
-    if (process.env.NODE_ENV === "development") {
-        console.log(`[SMS SANDBOX] To: ${phone} | Message: ${message}`);
-        return { success: true };
-    }
+    // if (process.env.NODE_ENV === "development") {
+    //     console.log(`[SMS SANDBOX] To: ${phone} | Message: ${message}`);
+    //     return { success: true };
+    // }
 
     // 2. Format phone number exactly for Bangladeshi carrier requirements
     // Ensures spacing, brackets, plus signs, and global country codes are normalized

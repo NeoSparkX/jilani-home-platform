@@ -1,4 +1,4 @@
-"use client";
+
 
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
@@ -365,8 +365,8 @@ export const TransactionInvoicePDF = ({ transaction }: TransactionInvoiceProps) 
             <Text style={styles.agencyDetail}>Whatsapp: +880 1788-992953</Text>
           </View>
           <View>
-            {/* The base URL or direct public path should work in client-side react-pdf rendering */}
-            <Image src="/agency/neosparkx.jpeg" style={styles.agencyLogo} />
+            {/* Provide a full URL or absolute path if available, otherwise fallback. Relative URLs often break in node environments for react-pdf. */}
+            <Image src={typeof window !== 'undefined' ? "/agency/neosparkx.jpeg" : (process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/agency/neosparkx.jpeg` : "https://neosparkx.com/logo.png")} style={styles.agencyLogo} />
           </View>
         </View>
 

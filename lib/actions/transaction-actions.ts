@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { transactions, users, pointPackages, promoCodes } from "@/lib/db/schema";
 import { eq, desc, asc, or, ilike, and, gte, lte, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { sendPaymentNotification } from "@/lib/emails/payment-notifications";
 
 export async function fetchTransactions(page: number, limit: number = 10, search = "", sortKey = "createdAt", sortOrder = "desc", filters: any = null) {
     const offset = (page - 1) * limit;
@@ -246,6 +247,18 @@ export async function submitCheckout(data: {
         // Or we increment it now? It's pending, let's increment it on success to be safe, but then concurrent users can bypass.
         // Let's stick to checking usage dynamically or incrementing on approval.
 
+        const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+        await sendPaymentNotification("pending", {
+            userName: user?.name || 'User',
+            userEmail: user?.email || '',
+            userPhone: user?.phoneNumber || data.senderNumber || '',
+            amount: amountPaid,
+            points: pkg.points,
+            trxId: data.gatewayTrxId,
+            invoiceId: invoiceNumber,
+            gateway: data.gateway,
+        });
+
         return { success: true, invoiceNumber };
 
     } catch (error: any) {
@@ -339,6 +352,33 @@ export async function updateTransactionStatus(id: string, status: "success" | "f
             }
         }
 
+        const pkg = trx.packageId ? await db.query.pointPackages.findFirst({ where: eq(pointPackages.id, trx.packageId) }) : null;
+        const promo = trx.promoCodeId ? await db.query.promoCodes.findFirst({ where: eq(promoCodes.id, trx.promoCodeId) }) : null;
+        
+        const transactionData = {
+            ...trx,
+            status,
+            userName: user?.name,
+            userEmail: user?.email,
+            packageName: pkg?.name,
+            promoCode: promo?.code,
+            amountPaid: String(trx.amountPaid),
+            originalAmount: String(trx.originalAmount),
+            discountAmount: String(trx.discountAmount),
+        };
+
+        await sendPaymentNotification(status, {
+            userName: user?.name || 'User',
+            userEmail: user?.email || '',
+            userPhone: user?.phoneNumber || trx.senderNumber || '',
+            amount: Number(trx.amountPaid),
+            points: trx.pointsCredited || 0,
+            trxId: trx.gatewayTrxId || trx.id,
+            invoiceId: trx.invoiceNumber || '',
+            gateway: trx.gateway || 'Unknown',
+            reason: remark || trx.remark || undefined,
+        }, transactionData);
+
         const { revalidatePath } = require("next/cache");
         revalidatePath("/admin/transactions");
 
@@ -427,6 +467,33 @@ export async function adminCreateTransaction(data: {
         await db.update(users)
             .set({ pointsBalance: (user.pointsBalance || 0) + pkg.points })
             .where(eq(users.id, data.userId));
+
+        const transactionData = {
+            createdAt: date,
+            status: "success",
+            userName: user.name,
+            userEmail: user.email,
+            invoiceNumber,
+            gatewayTrxId: data.gatewayTrxId,
+            gateway: data.gateway,
+            packageName: pkg.name,
+            pointsCredited: pkg.points,
+            originalAmount: String(originalAmount),
+            discountAmount: String(discountAmount),
+            promoCode: data.promoCodeId ? (await db.query.promoCodes.findFirst({ where: eq(promoCodes.id, data.promoCodeId) }))?.code : undefined,
+            amountPaid: String(Math.max(0, originalAmount - discountAmount)),
+        };
+
+        await sendPaymentNotification("success", {
+            userName: user.name || 'User',
+            userEmail: user.email || '',
+            userPhone: user.phoneNumber || data.senderNumber || '',
+            amount: Number(transactionData.amountPaid),
+            points: pkg.points,
+            trxId: data.gatewayTrxId,
+            invoiceId: invoiceNumber,
+            gateway: data.gateway,
+        }, transactionData);
 
         const { revalidatePath } = require("next/cache");
         revalidatePath("/admin/transactions");
