@@ -1,17 +1,30 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
 import { users, verificationTokens } from "@/lib/db/schema";
 import { eq, or, and, gte } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 
+/**
+ * Full Auth.js configuration — Node.js runtime ONLY.
+ *
+ * This file extends the edge-safe authConfig with the real provider
+ * authorize() functions that need bcryptjs and database access.
+ *
+ * Import `auth`, `signIn`, `signOut`, `handlers` from THIS file in:
+ *   - Server Components (layouts, pages)
+ *   - Server Actions
+ *   - API Routes
+ *
+ * Do NOT import from this file in middleware.ts — use auth.config.ts instead.
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    // adapter: DrizzleAdapter(db),
-    session: { strategy: "jwt" },
-    providers: [
+    ...authConfig,
 
+    // Override the providers with full authorize() implementations
+    providers: [
         // --- 1. GOOGLE OAUTH ---
         Google({
             clientId: process.env.AUTH_GOOGLE_ID,
@@ -164,8 +177,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
         }),
     ],
+
     callbacks: {
-        // 1. SIGN IN INTERCEPTOR
+        ...authConfig.callbacks,
+
+        // Override signIn to add the Google user DB sync
         async signIn({ user, account }) {
             if (account?.provider === "google") {
                 if (!user.email) return false;
@@ -178,11 +194,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 if (existingUser) {
                     // 🚨 If the user exists AND has a deletedAt timestamp, block the login
                     if (existingUser.deletedAt !== null) {
-                        return false; // Returning false immediately redirects them to an "Access Denied" error page
+                        return false;
                     }
                 } else {
                     await db.insert(users).values({
-                        id: crypto.randomUUID(), // Creates the Postgres UUID
+                        id: crypto.randomUUID(),
                         name: user.name || "Google User",
                         email: user.email,
                         role: 'user',
@@ -193,13 +209,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return true;
         },
 
-
-        // 2. JWT SESSION BUILDER
-        // 2. JWT SESSION BUILDER
+        // Override JWT to handle Google-specific DB lookups on first login
         async jwt({ token, user, trigger, session, account }) {
-            // 'account' and 'user' are ONLY present on the very first login request (Runs on Node.js - SAFE)
             if (account && user) {
                 if (account.provider === "google") {
+                    // For Google, we need to fetch the DB user to get the role & phone
                     const [dbUser] = await db
                         .select()
                         .from(users)
@@ -228,25 +242,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.phoneNumber = session.phoneNumber;
             }
 
-            // WE REMOVED THE MID-SESSION DB QUERY HERE TO PREVENT EDGE RUNTIME CRASHES
-
             return token;
         },
-
-        // 3. PASS TO BROWSER
-        async session({ session, token }) {
-            // 🚨 Prevent mapping if the token was destroyed (user was deleted)
-            if (!token?.id) {
-                return session; // Returns unauthenticated state
-            }
-
-            if (token && session.user) {
-                // Map our custom token data into the final session object
-                session.user.id = token.id;
-                session.user.phoneNumber = token.phoneNumber;
-                session.user.role = token.role;
-            }
-            return session;
-        },
-    }
+    },
 });
