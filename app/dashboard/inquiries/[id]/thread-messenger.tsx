@@ -27,7 +27,7 @@ export function ThreadMessenger({ ticket, messages, currentUserId }: { ticket: a
 
         try {
             let fileUrls: string[] = [];
-            
+
             if (file && file.size > 0) {
                 const { success, uploadUrl, finalUrl } = await getPresignedR2Url(file.name, file.type);
                 if (success && uploadUrl && finalUrl) {
@@ -97,9 +97,9 @@ export function ThreadMessenger({ ticket, messages, currentUserId }: { ticket: a
                     const isMe = msg.senderId === currentUserId;
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white rounded-bl-none'}`}>
+                            <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe ? 'bg-gray-900 text-gray-100 dark:bg-blue-800 dark:text-white rounded-br-none' : 'bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white rounded-bl-none'}`}>
                                 <p className="whitespace-pre-wrap text-sm">{msg.message}</p>
-                                
+
                                 {msg.fileUrls && msg.fileUrls.length > 0 && (
                                     <div className="mt-2 space-y-1">
                                         {msg.fileUrls.map((url: string, i: number) => (
@@ -123,9 +123,9 @@ export function ThreadMessenger({ ticket, messages, currentUserId }: { ticket: a
                 {ticket.status === 'closed' ? (
                     <div className="flex flex-col items-center justify-center p-4 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-200">
                         <p className="font-medium text-sm">This conversation is locked.</p>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             className="mt-3 bg-white hover:bg-yellow-100 border-yellow-300 text-yellow-900"
                             onClick={handleReopen}
                             disabled={loading}
@@ -137,7 +137,7 @@ export function ThreadMessenger({ ticket, messages, currentUserId }: { ticket: a
                 ) : (
                     <div className="flex items-end gap-2">
                         <div className="flex-1 bg-white dark:bg-[#0F172A] border border-gray-200 dark:border-white/10 rounded-lg focus-within:ring-1 focus-within:ring-blue-500">
-                            <Textarea 
+                            <Textarea
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 placeholder="Type your message..."
@@ -161,14 +161,14 @@ export function ThreadMessenger({ ticket, messages, currentUserId }: { ticket: a
                                 <div className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0F172A] hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                     <Paperclip className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                                 </div>
-                                <input 
-                                    type="file" 
-                                    className="hidden" 
+                                <input
+                                    type="file"
+                                    className="hidden"
                                     onChange={(e) => {
                                         if (e.target.files && e.target.files[0]) {
                                             setFile(e.target.files[0]);
                                         }
-                                    }} 
+                                    }}
                                 />
                             </label>
                             <Button size="icon" className="w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSend} disabled={loading || (!message.trim() && !file)}>
