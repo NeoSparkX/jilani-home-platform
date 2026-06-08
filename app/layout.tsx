@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Inter, Space_Grotesk, Noto_Sans_Bengali } from 'next/font/google';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import '@/styles/globals.css';
 import { Providers } from "./providers";
@@ -37,6 +37,13 @@ const spaceGrotesk = Space_Grotesk({
   display: 'swap',
 });
 
+const notoSansBengali = Noto_Sans_Bengali({
+  subsets: ['bengali', 'latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-bengali',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Jilani Home',
   description:
@@ -52,7 +59,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="light" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${notoSansBengali.variable} font-sans antialiased`}
         style={{ scrollBehavior: 'smooth' }}
       >
         <ThemeProvider>

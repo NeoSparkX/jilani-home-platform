@@ -20,7 +20,7 @@ export default function LogoutPage() {
             >
                 {/* A subtle loading spinner so the user isn't staring at a blank screen for a split second */}
                 <div className="w-8 h-8 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
-                <p className="text-[#9CA3AF] font-['Inter'] text-sm tracking-wide animate-pulse">
+                <p className="text-[#9CA3AF] font-sans text-sm tracking-wide animate-pulse">
                     Clearing ghost session...
                 </p>
             </motion.div>

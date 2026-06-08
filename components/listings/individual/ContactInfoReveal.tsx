@@ -115,7 +115,7 @@ export default function ContactInfoReveal({ propertyId, hasUnlockedInitially, zo
                                 <div className="w-12 h-12 bg-[#3B82F6]/10 text-[#3B82F6] rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Lock className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Authentication Required</h3>
+                                <h3 className="text-xl font-bold text-white mb-2 font-heading">Authentication Required</h3>
                                 <p className="text-gray-400 text-sm mb-6">You must log in or create an account to securely unlock and view private property details.</p>
 
                                 <div className="flex flex-col gap-3">
@@ -135,7 +135,7 @@ export default function ContactInfoReveal({ propertyId, hasUnlockedInitially, zo
                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${userBalance >= UNLOCK_COST ? 'bg-[#3B82F6]/10 text-[#3B82F6]' : 'bg-amber-500/10 text-amber-500'}`}>
                                         {userBalance >= UNLOCK_COST ? <Unlock className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Unlock Property</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2 font-heading">Unlock Property</h3>
                                     <p className="text-gray-400 text-sm mb-4">Access the exact address and direct contact numbers for this owner.</p>
 
                                     {/* Receipt / Balance Box */}

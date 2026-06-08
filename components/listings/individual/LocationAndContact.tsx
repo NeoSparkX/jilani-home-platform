@@ -72,7 +72,7 @@ export default function LocationAndContact({ propertyId, zone, hasUnlockedInitia
                         {!isLoggedIn ? (
                             <div className="text-center pt-2">
                                 <div className="w-12 h-12 bg-[#3B82F6]/10 text-[#3B82F6] rounded-full flex items-center justify-center mx-auto mb-4"><Lock className="w-6 h-6" /></div>
-                                <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Authentication Required</h3>
+                                <h3 className="text-xl font-bold text-white mb-2 font-heading">Authentication Required</h3>
                                 <p className="text-gray-400 text-sm mb-6">Log in or create an account to securely unlock private property details.</p>
                                 <div className="flex flex-col gap-3">
                                     <Link href="/login" onClick={() => setShowModal(false)}><button className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold py-2.5 rounded-xl transition-colors">Log In</button></Link>
@@ -84,7 +84,7 @@ export default function LocationAndContact({ propertyId, zone, hasUnlockedInitia
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${userBalance >= UNLOCK_COST ? 'bg-[#3B82F6]/10 text-[#3B82F6]' : 'bg-amber-500/10 text-amber-500'}`}>
                                     {userBalance >= UNLOCK_COST ? <Unlock className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Unlock Property</h3>
+                                <h3 className="text-xl font-bold text-white mb-2 font-heading">Unlock Property</h3>
                                 <p className="text-gray-400 text-sm mb-4">Access the detailed address and direct contact numbers for this owner.</p>
 
                                 <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 mb-4 text-sm">
@@ -116,7 +116,7 @@ export default function LocationAndContact({ propertyId, zone, hasUnlockedInitia
 
     return (
         <div className="bg-[#111111] border border-white/[0.07] rounded-3xl p-6 md:p-8 relative overflow-hidden">
-            <h2 className="font-['Space_Grotesk'] text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="font-heading text-xl font-bold text-white mb-6 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#3B82F6]" /> Location & Contact Info
             </h2>
 

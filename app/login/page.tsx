@@ -44,7 +44,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] font-['Inter'] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-[#3B82F6]/30">
+    <div className="min-h-screen bg-[#0D0D0D] font-sans flex items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-[#3B82F6]/30">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-[#3B82F6] rounded-full blur-[200px] opacity-[0.07]" />
@@ -67,7 +67,7 @@ export default function Login() {
               alt="Jilani Home"
               className="w-9 h-9 rounded-lg object-cover"
             />
-            <span className="font-['Space_Grotesk'] font-bold text-white text-lg tracking-wide group-hover:text-[#3B82F6] transition-colors">
+            <span className="font-heading font-bold text-white text-lg tracking-wide group-hover:text-[#3B82F6] transition-colors">
               Jilani Home
             </span>
           </Link>
@@ -83,7 +83,7 @@ export default function Login() {
           </Link>
 
           {/* Heading */}
-          <h1 className="font-['Space_Grotesk'] text-white mb-1.5" style={{ fontSize: '2rem', fontWeight: 700, lineHeight: '1.2' }}>
+          <h1 className="font-heading text-white mb-1.5" style={{ fontSize: '2rem', fontWeight: 700, lineHeight: '1.2' }}>
             Welcome back.
           </h1>
           <p className="text-[#6B7280] mb-8 text-sm">Sign in to your account to continue</p>
@@ -183,7 +183,7 @@ export default function Login() {
 
           {/* Bottom overlay text */}
           <div className="absolute bottom-10 left-8 right-8">
-            <p className="font-['Space_Grotesk'] mb-2" style={{ fontSize: '1.6rem', fontWeight: 600, lineHeight: '1.25', color: '#ffffff' }}>
+            <p className="font-heading mb-2" style={{ fontSize: '1.6rem', fontWeight: 600, lineHeight: '1.25', color: '#ffffff' }}>
               Elevate your workspace.
             </p>
             <p className="text-[#9CA3AF] text-sm leading-relaxed">

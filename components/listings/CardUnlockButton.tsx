@@ -51,7 +51,7 @@ export default function CardUnlockButton({ propertyId, isUnlockedInitially, isLo
                         {!isLoggedIn ? (
                             <div className="text-center pt-2">
                                 <div className="w-12 h-12 bg-[#3B82F6]/10 text-[#3B82F6] rounded-full flex items-center justify-center mx-auto mb-4"><Lock className="w-6 h-6" /></div>
-                                <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Log in required</h3>
+                                <h3 className="text-xl font-bold text-white mb-2 font-heading">Log in required</h3>
                                 <p className="text-gray-400 text-sm mb-6">Create an account to securely unlock private property details.</p>
                                 <div className="flex flex-col gap-3">
                                     <Link href="/login" onClick={() => setShowModal(false)}><button className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold py-2.5 rounded-xl transition-colors">Log In</button></Link>
@@ -63,7 +63,7 @@ export default function CardUnlockButton({ propertyId, isUnlockedInitially, isLo
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${userBalance >= UNLOCK_COST ? 'bg-[#3B82F6]/10 text-[#3B82F6]' : 'bg-amber-500/10 text-amber-500'}`}>
                                     {userBalance >= UNLOCK_COST ? <Unlock className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Unlock Property</h3>
+                                <h3 className="text-xl font-bold text-white mb-2 font-heading">Unlock Property</h3>
                                 <p className="text-gray-400 text-sm mb-4">Unlock this card to access the owner's exact address and phone number.</p>
                                 <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 mb-4 text-sm">
                                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/5"><span className="text-gray-400">Unlock Cost</span><span className="text-white font-semibold">{UNLOCK_COST} Points</span></div>

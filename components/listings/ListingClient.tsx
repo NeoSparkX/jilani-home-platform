@@ -130,11 +130,11 @@ export default function ListingsClient({ isLoggedIn, userBalance, hideNavAndFoot
     ].filter(Boolean).length;
 
     return (
-        <div className={`min-h-screen text-white font-['Inter'] overflow-x-hidden ${hideNavAndFooter ? 'bg-transparent' : 'bg-[#0D0D0D]'}`}>
+        <div className={`min-h-screen text-white font-sans overflow-x-hidden ${hideNavAndFooter ? 'bg-transparent' : 'bg-[#0D0D0D]'}`}>
             {!hideNavAndFooter && <Navbar />}
             <div className={`pb-8 border-b border-white/[0.06] relative overflow-hidden ${hideNavAndFooter ? 'pt-4' : 'pt-28'}`}>
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
-                    <h1 className="font-['Space_Grotesk'] text-3xl md:text-4xl font-bold text-white mb-1">Browse Spaces</h1>
+                    <h1 className="font-heading text-3xl md:text-4xl font-bold text-white mb-1">Browse Spaces</h1>
                     <div className="flex gap-3 mt-5">
                         <div className="relative flex-1 max-w-xl">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -154,7 +154,7 @@ export default function ListingsClient({ isLoggedIn, userBalance, hideNavAndFoot
                         <aside className="hidden lg:block w-64 shrink-0">
                             <div className="sticky top-24 bg-[#111111] border border-white/[0.07] rounded-2xl p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <span className="font-['Space_Grotesk'] font-semibold text-white flex items-center gap-2"><SlidersHorizontal className="w-4 h-4 text-[#3B82F6]" /> Filters</span>
+                                    <span className="font-heading font-semibold text-white flex items-center gap-2"><SlidersHorizontal className="w-4 h-4 text-[#3B82F6]" /> Filters</span>
                                 </div>
                                 <FilterSidebar
                                     typeFilter={typeFilter} setTypeFilter={setTypeFilter}
@@ -175,7 +175,7 @@ export default function ListingsClient({ isLoggedIn, userBalance, hideNavAndFoot
                             <>
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)} className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 ${hideNavAndFooter ? '' : 'lg:hidden'}`} />
                                 <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 28, stiffness: 280 }} className={`fixed left-0 top-0 bottom-0 w-80 bg-[#111111] border-r border-white/[0.07] z-50 overflow-y-auto p-6 ${hideNavAndFooter ? '' : 'lg:hidden'}`}>
-                                    <div className="flex items-center justify-between mb-6"><span className="font-['Space_Grotesk'] font-semibold text-white">Filters</span><button onClick={() => setSidebarOpen(false)} className="text-gray-500"><X className="w-5 h-5" /></button></div>
+                                    <div className="flex items-center justify-between mb-6"><span className="font-heading font-semibold text-white">Filters</span><button onClick={() => setSidebarOpen(false)} className="text-gray-500"><X className="w-5 h-5" /></button></div>
                                     <FilterSidebar
                                         typeFilter={typeFilter} setTypeFilter={setTypeFilter}
                                         availableCities={availableCities} cityFilter={cityFilter} setCityFilter={setCityFilter}

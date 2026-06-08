@@ -172,7 +172,7 @@ export default function ListingCard({
                             {listing.verified && <CheckCircle2 className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />}
                             {listing.tag && <span className="text-xs font-semibold text-[#3B82F6] bg-[#3B82F6]/10 px-2 py-0.5 rounded-full">{listing.tag}</span>}
                         </div>
-                        <h3 className="font-['Space_Grotesk'] text-white font-semibold">{listing.title}</h3>
+                        <h3 className="font-heading text-white font-semibold">{listing.title}</h3>
                         <p className="text-gray-500 text-sm flex items-center gap-1 mt-0.5"><MapPin className="w-3.5 h-3.5 shrink-0 text-gray-600" />{listing.area}, {listing.city}</p>
 
                         <p className="text-gray-600 text-xs mt-2 line-clamp-2">{listing.description}</p>
@@ -207,7 +207,7 @@ export default function ListingCard({
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 shrink-0 pt-3 sm:pt-0 border-t border-white/[0.06] sm:border-0">
                         <div className="sm:text-right">
                             <span className="text-xs text-gray-500 block">Starting from</span>
-                            <span className="text-white font-['Space_Grotesk'] font-bold">{listing.price}</span>
+                            <span className="text-white font-heading font-bold">{listing.price}</span>
                         </div>
                     </div>
                 </div>
@@ -270,7 +270,7 @@ export default function ListingCard({
                             <span className="text-gray-400 text-xs">views</span>
                         </div>
                     </div>
-                    <h3 className="font-['Space_Grotesk'] text-white font-semibold leading-snug group-hover:text-[#3B82F6] transition-colors line-clamp-1">{listing.title}</h3>
+                    <h3 className="font-heading text-white font-semibold leading-snug group-hover:text-[#3B82F6] transition-colors line-clamp-1">{listing.title}</h3>
                     <p className="text-gray-500 text-sm flex items-center gap-1 mt-1"><MapPin className="w-3.5 h-3.5 shrink-0 text-gray-600" />{listing.area}, {listing.city}</p>
 
                     <p className="text-gray-600 text-xs mt-2 line-clamp-2">{listing.description}</p>
@@ -292,7 +292,7 @@ export default function ListingCard({
                 <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] mt-auto">
                     <div>
                         <span className="text-gray-600 text-xs block">Starting from</span>
-                        <span className="inline text-white font-['Space_Grotesk'] font-semibold">{listing.price} {listing.priceType !== 'one-time' && listing.priceType ? <span className="inline text-gray-600 text-xs">&nbsp;/&nbsp;{listing.priceType}</span> : ''}</span>
+                        <span className="inline text-white font-heading font-semibold">{listing.price} {listing.priceType !== 'one-time' && listing.priceType ? <span className="inline text-gray-600 text-xs">&nbsp;/&nbsp;{listing.priceType}</span> : ''}</span>
                     </div>
                 </div>
             </div>

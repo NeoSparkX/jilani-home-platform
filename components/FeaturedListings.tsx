@@ -214,7 +214,7 @@ function FeaturedCard({ property, state, isLoggedIn, userBalance }: { property: 
               <span className="text-gray-400 text-xs">views</span>
             </div>
           </div>
-          <h3 className="font-['Space_Grotesk'] text-white font-semibold leading-snug">
+          <h3 className="font-heading text-white font-semibold leading-snug">
             {property.title}
           </h3>
           <p className="text-gray-500 text-sm flex items-center gap-1 mt-1">
@@ -242,7 +242,7 @@ function FeaturedCard({ property, state, isLoggedIn, userBalance }: { property: 
         <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
           <div>
             <span className="text-gray-600 text-xs block">Starting from</span>
-            <span className="text-white font-['Space_Grotesk'] font-semibold text-sm">{TakaDisplay(property.price)} <span className="text-xs text-gray-600"> {property.priceType !== "one-time" ? " / " + property.priceType : ""}</span></span>
+            <span className="text-white font-heading font-semibold text-sm">{TakaDisplay(property.price)} <span className="text-xs text-gray-600"> {property.priceType !== "one-time" ? " / " + property.priceType : ""}</span></span>
           </div>
           <Link href={`/listings/${property.slug}`}
             className="text-xs text-white bg-[#3B82F6] hover:bg-[#2563EB] px-4 py-2 rounded-lg transition-all font-semibold keep-white"
@@ -389,7 +389,7 @@ export default function FeaturedListings({ isLoggedIn, userBalance }: { isLogged
   if (isLoading) {
     return (
       <section className="py-16 sm:py-24 flex items-center justify-center">
-        <div className="text-[#3B82F6] animate-pulse font-['Space_Grotesk'] text-xl">Loading Featured Spaces...</div>
+        <div className="text-[#3B82F6] animate-pulse font-heading text-xl">Loading Featured Spaces...</div>
       </section>
     );
   }
@@ -408,7 +408,7 @@ export default function FeaturedListings({ isLoggedIn, userBalance }: { isLogged
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16 space-y-3 sm:space-y-4">
-          <h2 className="font-['Space_Grotesk'] text-3xl md:text-5xl font-bold text-white">
+          <h2 className="font-heading text-3xl md:text-5xl font-bold text-white">
             প্রিমিয়াম স্পেস,{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] to-[#60A5FA]">
               শতভাগ যাচাইকৃত

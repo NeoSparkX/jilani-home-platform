@@ -161,7 +161,7 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
   const propType = propertyTypes[listing.type.toLowerCase()] || propertyTypes['house'];
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white font-['Inter'] overflow-x-hidden">
+    <div className="min-h-screen bg-[#0D0D0D] text-white font-sans overflow-x-hidden">
       <Navbar />
 
       {/* ── Page header ── */}
@@ -184,7 +184,7 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
                 {listing.tag && <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white"><Sparkles className="w-3 h-3 text-[#F59E0B]" /> {listing.tag}</span>}
               </div>
 
-              <h1 className="font-['Space_Grotesk'] text-2xl md:text-3xl font-bold text-white">{listing.title}</h1>
+              <h1 className="font-heading text-2xl md:text-3xl font-bold text-white">{listing.title}</h1>
               <p className="flex items-center gap-1.5 text-gray-400 text-sm mt-1"><MapPin className="w-3.5 h-3.5 text-gray-500 shrink-0" /> {listing.area}, {listing.city}</p>
             </div>
 
@@ -228,13 +228,13 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
 
             {/* Description */}
             <div className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
-              <h2 className="font-['Space_Grotesk'] text-white font-semibold mb-3">About This Space</h2>
+              <h2 className="font-heading text-white font-semibold mb-3">About This Space</h2>
               <p className="text-gray-400 leading-relaxed whitespace-pre-wrap">{listing.description}</p>
             </div>
 
             {/* Amenities */}
             <div className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
-              <h2 className="font-['Space_Grotesk'] text-white font-semibold mb-4">Amenities & Features</h2>
+              <h2 className="font-heading text-white font-semibold mb-4">Amenities & Features</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {listing.amenities.map(a => (
                   <div key={a} className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3">
@@ -274,7 +274,7 @@ export default async function ListingDetail(props: { params: Promise<{ slug: str
             <div className="bg-[#111111] border border-white/[0.07] rounded-2xl p-6 animate-in fade-in slide-in-from-right-4 duration-500 delay-100 fill-mode-both">
               <div className="mb-3">
                 <span className="text-gray-500 text-xs block mb-1">Starting from</span>
-                <span className="font-['Space_Grotesk'] text-3xl font-bold text-white">
+                <span className="font-heading text-3xl font-bold text-white">
                   {listing.price}
                   <span className='text-sm text-gray-400'> ({listing.priceType === 'year' ? 'per year' : listing.priceType === 'month' ? 'per month' : listing.priceType === 'day' ? 'per day' : 'One Time'})</span>
                 </span>

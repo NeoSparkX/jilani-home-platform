@@ -29,7 +29,7 @@ export default function HowItWorks() {
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-20 space-y-4">
-          <h2 className="font-['Space_Grotesk'] text-3xl md:text-5xl font-bold text-white">
+          <h2 className="font-heading text-3xl md:text-5xl font-bold text-white">
             কীভাবে <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] to-[#60A5FA]">কাজ করে</span>
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
@@ -60,7 +60,7 @@ export default function HowItWorks() {
                   <div className="space-y-3 relative z-10">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-[#3B82F6] text-sm font-bold opacity-50">0{index + 1}</span>
-                      <h3 className="font-['Space_Grotesk'] text-xl font-bold text-white tracking-wide">
+                      <h3 className="font-heading text-xl font-bold text-white tracking-wide">
                         {step.title}
                       </h3>
                     </div>

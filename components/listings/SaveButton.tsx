@@ -94,7 +94,7 @@ export default function SaveButton({ propertyId, initialSavedState = false, styl
                             <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Heart className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2 font-['Space_Grotesk']">Save your favorites</h3>
+                            <h3 className="text-xl font-bold text-white mb-2 font-heading">Save your favorites</h3>
                             <p className="text-gray-400 text-sm mb-6">Create an account or log in to save this property and view it later on any device.</p>
 
                             <div className="flex flex-col gap-3">

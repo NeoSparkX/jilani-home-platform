@@ -98,7 +98,7 @@ export default function ShareButton({ title }: ShareButtonProps) {
                         >
                             {/* Header */}
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white font-['Space_Grotesk']">Share this space</h3>
+                                <h3 className="text-xl font-bold text-white font-heading">Share this space</h3>
                                 <button
                                     onClick={() => setIsOpen(false)}
                                     className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-gray-400 hover:text-white transition-all"

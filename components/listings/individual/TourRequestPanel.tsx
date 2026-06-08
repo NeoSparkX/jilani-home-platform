@@ -34,7 +34,7 @@ export default function TourRequestPanel({ listingTitle }: { listingTitle: strin
     return (
         <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, delay: 0.22 }} className="bg-[#111111] border border-white/[0.07] rounded-2xl overflow-hidden">
             <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
-                <div className="flex items-center gap-2 mb-0.5"><Calendar className="w-4 h-4 text-[#3B82F6]" /><h3 className="font-['Space_Grotesk'] text-white font-semibold">Check Availability</h3></div>
+                <div className="flex items-center gap-2 mb-0.5"><Calendar className="w-4 h-4 text-[#3B82F6]" /><h3 className="font-heading text-white font-semibold">Check Availability</h3></div>
                 <p className="text-gray-500 text-xs">Pick a date & time slot to request a tour</p>
             </div>
             <div className="p-5 space-y-5">

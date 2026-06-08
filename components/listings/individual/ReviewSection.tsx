@@ -67,7 +67,7 @@ export default function ReviewSection({ propertyId, averageRating, totalReviews,
             {/* ── Header & Stats ── */}
             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                 <div>
-                    <h2 className="font-['Space_Grotesk'] text-2xl font-bold text-white mb-1">Ratings & Reviews</h2>
+                    <h2 className="font-heading text-2xl font-bold text-white mb-1">Ratings & Reviews</h2>
                     <p className="text-gray-400 text-sm">Ratings are calculated instantly.</p>
                 </div>
 
@@ -75,7 +75,7 @@ export default function ReviewSection({ propertyId, averageRating, totalReviews,
                     {/* The Average Score Box */}
                     <div className="flex items-center gap-4 bg-[#141414] px-5 py-3 rounded-2xl border border-white/[0.05]">
                         <div className="text-center">
-                            <span className="text-3xl font-['Space_Grotesk'] font-bold text-white">{averageRating}</span>
+                            <span className="text-3xl font-heading font-bold text-white">{averageRating}</span>
                         </div>
                         <div>
                             <div className="flex items-center gap-0.5 mb-0.5">

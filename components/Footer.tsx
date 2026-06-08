@@ -31,7 +31,7 @@ export default function Footer() {
                 alt="Logo"
                 className="w-10 h-10 rounded-lg object-cover"
               />
-              <span className="font-['Space_Grotesk'] font-bold text-2xl tracking-wide text-white">Jilani Home</span>
+              <span className="font-heading font-bold text-2xl tracking-wide text-white">Jilani Home</span>
             </div>
             <p className="text-gray-500 text-sm max-w-sm leading-relaxed">
               The premium gated marketplace for verified office spaces and event halls. Connect directly, pay once, and secure your perfect venue.
@@ -41,7 +41,7 @@ export default function Footer() {
           {/* Links Section */}
           {footerLinks.map((column, i) => (
             <div key={i} className="lg:col-span-2 space-y-6">
-              <h4 className="text-white font-semibold font-['Space_Grotesk'] tracking-wide">
+              <h4 className="text-white font-semibold font-heading tracking-wide">
                 {column.title}
               </h4>
               <ul className="space-y-4">
@@ -58,7 +58,7 @@ export default function Footer() {
 
           {/* Developer Agency Section */}
           <div className="lg:col-span-3 space-y-6">
-            <h4 className="text-white font-semibold font-['Space_Grotesk'] tracking-wide">
+            <h4 className="text-white font-semibold font-heading tracking-wide">
               Developed By
             </h4>
             <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-5 hover:border-white/10 transition-colors">

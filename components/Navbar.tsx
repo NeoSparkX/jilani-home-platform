@@ -31,7 +31,7 @@ export default function Navbar() {
               alt="Jilani Home"
               className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg object-contain"
             />
-            <span className="font-['Space_Grotesk'] font-semibold text-white text-sm sm:text-base pr-1 sm:pr-2 keep-white">Jilani Home</span>
+            <span className="font-heading font-semibold text-white text-sm sm:text-base pr-1 sm:pr-2 keep-white">Jilani Home</span>
           </Link>
         </div>
 
