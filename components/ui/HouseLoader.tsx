@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 interface HouseLoaderProps {
     /** Optional manual progress tracking (0-100). Self-simulates seamlessly if undefined. */
     value?: number;
+    /** Whether the loader should act as a full-screen overlay */
+    isOverlay?: boolean;
 }
 
 const LOADING_MESSAGES = [
