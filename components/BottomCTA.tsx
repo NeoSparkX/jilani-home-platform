@@ -26,7 +26,7 @@ export default function BottomCTA() {
             </span>
           </h2>
           <p className="text-gray-400 text-xl md:text-2xl font-light max-w-2xl mx-auto mb-12">
-            অনুমান করা বন্ধ করুন। যাচাইকৃত লিস্টিংগুলো আনলক করুন এবং Chattogram-এর স্পেস মালিকদের সাথে সরাসরি যোগাযোগ করুন।
+            অনুমান করা বন্ধ করুন। যাচাইকৃত লিস্টিংগুলো আনলক করুন এবং চট্টগ্রামের স্পেস মালিকদের সাথে সরাসরি যোগাযোগ করুন।
           </p>
           
           <Link href="/signup" className="inline-flex items-center justify-center gap-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-lg font-bold px-10 py-5 rounded-full transition-all shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:shadow-[0_0_50px_rgba(59,130,246,0.5)] group hover:-translate-y-1 keep-white">
