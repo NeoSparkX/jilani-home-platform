@@ -91,7 +91,7 @@ export default function ReviewSection({ propertyId, averageRating, totalReviews,
                     <div>
                         {!isLoggedIn ? (
                             <Link href="/login">
-                                <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-all">
+                                <button className="bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm font-semibold px-5 py-3 rounded-xl transition-all">
                                     Log in to Review
                                 </button>
                             </Link>
@@ -157,7 +157,7 @@ export default function ReviewSection({ propertyId, averageRating, totalReviews,
                                     <button
                                         onClick={handleSubmit}
                                         disabled={isSubmitting || selectedRating === 0}
-                                        className="bg-white text-black hover:bg-gray-200 disabled:opacity-50 text-sm font-semibold px-6 py-2.5 rounded-lg transition-all"
+                                        className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 disabled:opacity-50 text-sm font-semibold px-6 py-2.5 rounded-lg transition-all"
                                     >
                                         {isSubmitting ? 'Submitting...' : 'Post Review'}
                                     </button>

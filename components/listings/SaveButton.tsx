@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Heart, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
@@ -17,6 +18,11 @@ export default function SaveButton({ propertyId, initialSavedState = false, styl
     const [isSaved, setIsSaved] = useState(initialSavedState);
     const [isLoading, setIsLoading] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleSave = async (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent triggering parent Link tags if used inside a card
@@ -68,51 +74,54 @@ export default function SaveButton({ propertyId, initialSavedState = false, styl
             </button>
 
             {/* THE AUTH POPUP MODAL */}
-            <AnimatePresence>
-                {showAuthModal && (
-                    <div className="fixed inset-0 z-[999] flex items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                            onClick={() => setShowAuthModal(false)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative bg-[#111111] border border-white/10 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center z-10"
-                        >
-                            <button
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {showAuthModal && (
+                        <div className="fixed inset-0 z-[99999] flex items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                                 onClick={() => setShowAuthModal(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                className="relative bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center z-10"
                             >
-                                <X className="w-5 h-5" />
-                            </button>
+                                <button
+                                    onClick={() => setShowAuthModal(false)}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
 
-                            <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Heart className="w-6 h-6" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-2 font-heading">Save your favorites</h3>
-                            <p className="text-gray-400 text-sm mb-6">Create an account or log in to save this property and view it later on any device.</p>
+                                <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Heart className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-heading">Save your favorites</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Create an account or log in to save this property and view it later on any device.</p>
 
-                            <div className="flex flex-col gap-3">
-                                <Link href="/login" onClick={() => setShowAuthModal(false)}>
-                                    <button className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold py-2.5 rounded-xl transition-colors">
-                                        Log In
-                                    </button>
-                                </Link>
-                                <Link href="/signup" onClick={() => setShowAuthModal(false)}>
-                                    <button className="w-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white font-semibold py-2.5 rounded-xl transition-colors">
-                                        Create an Account
-                                    </button>
-                                </Link>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                <div className="flex flex-col gap-3">
+                                    <Link href="/login" onClick={() => setShowAuthModal(false)}>
+                                        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors">
+                                            Log In
+                                        </button>
+                                    </Link>
+                                    <Link href="/signup" onClick={() => setShowAuthModal(false)}>
+                                        <button className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-semibold py-2.5 rounded-xl transition-colors">
+                                            Create an Account
+                                        </button>
+                                    </Link>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </>
     );
 }
