@@ -1,0 +1,100 @@
+name: Database Backup to Cloudflare R2
+
+on:
+  schedule:
+    # Runs everyday at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual backup'
+        required: false
+        default: 'Manual on-demand trigger'
+
+jobs:
+  backup:
+    name: Backup PostgreSQL to R2
+    runs-on: ubuntu-latest
+
+    env:
+      BUCKET_NAME: 'jilani-home-db'
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      R2_S3_ENDPOINT: ${{ secrets.R2_S3_ENDPOINT }}
+
+    steps:
+      - name: Validate secrets
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL secret is not set!"
+            exit 1
+          fi
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::error::R2 credentials (R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY) are not set!"
+            exit 1
+          fi
+          if [ -z "$R2_S3_ENDPOINT" ]; then
+            echo "::error::R2_S3_ENDPOINT secret is not set! (e.g. https://<ACCOUNT_ID>.r2.cloudflarestorage.com)"
+            exit 1
+          fi
+
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Generate Backup Filename & Destination Path
+        id: meta
+        run: |
+          # Determine trigger type (automatic vs manual)
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            TYPE="automatic"
+          else
+            TYPE="manual"
+          fi
+
+          MONTH=$(date -u +'%Y%m')
+          DATE=$(date -u +'%Y%m%d')
+          FILENAME="${DATE}_${TYPE}_backup.sql"
+          DEST_PATH="backup/${MONTH}/${FILENAME}"
+
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
+          echo "dest_path=$DEST_PATH" >> $GITHUB_OUTPUT
+          echo "Month folder : backup/${MONTH}"
+          echo "Target file  : ${DEST_PATH}"
+
+      - name: Dump PostgreSQL Database
+        run: |
+          LOCAL_FILE="${{ steps.meta.outputs.filename }}"
+          echo "Starting database dump to $LOCAL_FILE..."
+          
+          # Clean dump with DROP/CREATE, no owner/acl conflicts
+          pg_dump "$DATABASE_URL" \
+            --clean \
+            --if-exists \
+            --no-owner \
+            --no-acl \
+            -f "$LOCAL_FILE"
+
+          FILESIZE=$(stat -c%s "$LOCAL_FILE")
+          echo "Backup created successfully! Size: $FILESIZE bytes."
+
+      - name: Upload to Cloudflare R2
+        run: |
+          LOCAL_FILE="${{ steps.meta.outputs.filename }}"
+          DEST_PATH="${{ steps.meta.outputs.dest_path }}"
+
+          echo "Uploading $LOCAL_FILE to s3://${BUCKET_NAME}/${DEST_PATH}..."
+
+          aws s3 cp "$LOCAL_FILE" "s3://${BUCKET_NAME}/${DEST_PATH}" \
+            --endpoint-url "$R2_S3_ENDPOINT"
+
+          echo "Upload complete! Saved at: s3://${BUCKET_NAME}/${DEST_PATH}"
+
+      - name: Verify Upload
+        run: |
+          DEST_PATH="${{ steps.meta.outputs.dest_path }}"
+          aws s3 ls "s3://${BUCKET_NAME}/${DEST_PATH}" \
+            --endpoint-url "$R2_S3_ENDPOINT"
