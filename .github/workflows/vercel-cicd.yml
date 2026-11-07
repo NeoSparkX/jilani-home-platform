@@ -3,11 +3,16 @@ name: Vercel CI/CD
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - '**' # Matches every branch
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -16,7 +21,7 @@ env:
 jobs:
   deploy-preview:
     name: Deploy Preview to Vercel
-    if: github.event_name == 'pull_request'
+    if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -48,21 +53,45 @@ jobs:
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
 
-      - name: Comment Preview URL on PR
+      - name: Record Summary and Comment on PR
         uses: actions/github-script@v7
         with:
           script: |
             const url = '${{ steps.deploy.outputs.deployment_url }}';
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🚀 **Vercel Preview Deployment is ready!**\n\n🔗 Preview URL: ${url}`
-            });
+            const branch = '${{ github.ref_name }}';
+
+            // 1. Post to GitHub Step Summary
+            await core.summary
+              .addHeading('🚀 Vercel Preview Deployment')
+              .addTable([
+                [{ data: 'Branch', header: true }, { data: 'Preview URL', header: true }],
+                [branch, `[${url}](${url})`]
+              ])
+              .write();
+
+            // 2. If an open PR exists for this branch, post a comment
+            try {
+              const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+              });
+              if (pulls.data.length > 0) {
+                const prNumber = pulls.data[0].number;
+                await github.rest.issues.createComment({
+                  issue_number: prNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `🚀 **Vercel Preview Deployment is ready!**\n\n- **Branch:** \`${branch}\`\n- **Preview URL:** ${url}`
+                });
+              }
+            } catch (err) {
+              console.log('No PR found or unable to comment on PR:', err.message);
+            }
 
   deploy-production:
     name: Deploy Production to Vercel
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -89,4 +118,20 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel (Production)
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+
+      - name: Record Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.deployment_url }}';
+            await core.summary
+              .addHeading('🚀 Vercel Production Deployment')
+              .addTable([
+                [{ data: 'Environment', header: true }, { data: 'Production URL', header: true }],
+                ['Production (main)', `[${url}](${url})`]
+              ])
+              .write();
