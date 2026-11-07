@@ -12,7 +12,11 @@ const nextConfig: NextConfig = {
       // Replace with your actual R2 domain from your .env
       {
         protocol: 'https',
-        hostname: 'https://pub-6aea815763c94fd78eea844435f491df.r2.dev',
+        hostname: 'pub-6aea815763c94fd78eea844435f491df.r2.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.r2.dev',
       },
     ],
   },

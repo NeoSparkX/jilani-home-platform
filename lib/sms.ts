@@ -24,7 +24,8 @@ export async function sendSMS(phone: string, message: string) {
         const URL = 'https://smsnoc.com/api/v1/send-sms';
 
         if (!API_KEY) {
-            throw new Error("Missing SMSNOC_API_TOKEN in environment variables.");
+            console.warn(`[SMS SKIPPED] SMSNOC_API_TOKEN is missing. Skipping SMS to: ${formattedPhone}`);
+            return { success: true, skipped: true };
         }
 
         // 3. Fire Recommended POST Request with Bearer Token Authorization

@@ -20,7 +20,7 @@ interface NotificationParams {
 export async function sendPaymentNotification(status: PaymentStatus, params: NotificationParams, transactionData?: any) {
     const { userName, userEmail, userPhone, amount, points, trxId, invoiceId, gateway, reason } = params;
 
-    const fromEmail = `JILANI HOME <invoices@${process.env.RESEND_DOMAIN}>`;
+    const fromEmail = `JILANI HOME <invoices@${process.env.RESEND_DOMAIN || 'jilanihome.com'}>`;
 
     let subject = "";
     let smsText = "";

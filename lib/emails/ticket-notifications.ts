@@ -12,7 +12,7 @@ export async function sendTicketNotification(params: {
 }) {
     const { userName, userEmail, userPhone, ticketNumber, title, messages } = params;
 
-    const fromEmail = `JILANI HOME <support@${process.env.RESEND_DOMAIN}>`;
+    const fromEmail = `JILANI HOME <support@${process.env.RESEND_DOMAIN || 'jilanihome.com'}>`;
     const subject = `Update on your Ticket #${ticketNumber} - Jilani Home`;
     const emailTitle = "Support Ticket Update";
 
