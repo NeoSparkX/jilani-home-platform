@@ -186,7 +186,7 @@ export async function verifyAndUpdatePhone(newPhone: string, otp: string) {
 }
 
 export async function sendEmailOTP(email: string) {
-    const fromEmail = `JILANI HOME <noreply@${process.env.RESEND_DOMAIN}>`;
+    const fromEmail = `JILANI HOME <noreply@${process.env.RESEND_DOMAIN || 'jilanihome.com'}>`;
 
     try {
         const session = await auth();
@@ -382,7 +382,7 @@ export async function sendForgotPasswordOTP(identifier: string) {
 
         // 6. The Delivery
         if (isEmail) {
-            const fromEmail = `JILANI HOME <noreply@${process.env.RESEND_DOMAIN}>`;
+            const fromEmail = `JILANI HOME <noreply@${process.env.RESEND_DOMAIN || 'jilanihome.com'}>`;
             // 1. Write the inner content focused purely on the OTP
             const innerHtml = `
             <h2 style="margin-top: 0; color: #0f172a; text-align: center; font-size: 22px;">Secure Verification</h2>

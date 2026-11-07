@@ -1,17 +1,16 @@
 import { Resend } from 'resend';
 
-// Initialize the Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
-const defaultFrom = `JILANI HOME <hello@${process.env.RESEND_DOMAIN}>`;
+// Initialize the Resend client safely
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const defaultFrom = `JILANI HOME <hello@${process.env.RESEND_DOMAIN || 'jilanihome.com'}>`;
 
 export async function sendEmail(from: string = defaultFrom, to: string, subject: string, htmlContent: string, attachments?: { filename: string, content: Buffer }[]) {
-    // 1. Sandbox protection in development
-    // if (process.env.NODE_ENV === "development") {
-    //     console.log(`[DEV EMAIL] To: ${to} | Subject: ${subject}`);
-    //     // In dev, you might still want to test sending to yourself.
-    //     // Comment out the return true if you want to actually send in dev.
-    //     return { success: true };
-    // }
+    // If no API key is configured, skip safely without breaking builds or runtime
+    if (!resend) {
+        console.warn(`[EMAIL SKIPPED] RESEND_API_KEY is missing. Skipping email to: ${to} | Subject: "${subject}"`);
+        return { success: true, skipped: true };
+    }
 
     try {
         const payload: any = {
