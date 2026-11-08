@@ -42,6 +42,13 @@ export async function verifyAndRegisterUser(formData: FormData, otp: string) {
             return { error: "This phone number is already registered." };
         }
 
+        if (email) {
+            const [existingEmail] = await db.select().from(users).where(eq(users.email, email));
+            if (existingEmail) {
+                return { error: "This email address is already registered." };
+            }
+        }
+
         // 4. Securely hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 

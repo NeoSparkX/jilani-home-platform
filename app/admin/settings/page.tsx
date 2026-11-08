@@ -14,15 +14,29 @@ import {
   ShieldAlert,
   Server,
   Code,
+  User,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/components/providers/UserProvider";
+import { ProfileTab } from "@/components/dashboard/settings/ProfileTab";
+import { SecurityTab } from "@/components/dashboard/settings/SecurityTab";
 
-type Section = "general" | "security" | "appearance";
+type Section = "profile" | "account-security" | "general" | "security" | "appearance";
 
-const SECTIONS: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: "general", label: "Platform Info", icon: Globe },
-  { id: "security", label: "System Security", icon: Shield },
-  { id: "appearance", label: "Design System", icon: Palette },
+interface SectionItem {
+  id: Section;
+  label: string;
+  icon: React.ElementType;
+  group: "Personal" | "Platform";
+}
+
+const SECTIONS: SectionItem[] = [
+  { id: "profile", label: "Profile Info", icon: User, group: "Personal" },
+  { id: "account-security", label: "Password & Security", icon: Lock, group: "Personal" },
+  { id: "general", label: "Platform Info", icon: Globe, group: "Platform" },
+  { id: "security", label: "System Security", icon: Shield, group: "Platform" },
+  { id: "appearance", label: "Design System", icon: Palette, group: "Platform" },
 ];
 
 const Toggle = ({ defaultChecked = false }: { defaultChecked?: boolean }) => {
@@ -41,7 +55,8 @@ const Toggle = ({ defaultChecked = false }: { defaultChecked?: boolean }) => {
 };
 
 export default function AdminSettingsPage() {
-  const [active, setActive] = useState<Section>("general");
+  const user = useUser();
+  const [active, setActive] = useState<Section>("profile");
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
@@ -55,10 +70,10 @@ export default function AdminSettingsPage() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-          <p className="text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase">Configuration</p>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase">Configuration & Profile</p>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Platform Settings</h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Manage global platform identity, security, and appearance tokens.</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Admin & Platform Settings</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Manage your personal admin credentials, security, and global platform configuration.</p>
       </motion.div>
 
       {/* Integrated Settings Container */}
@@ -66,35 +81,73 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col lg:flex-row min-h-[700px]">
           
           {/* Connected Sidebar Nav */}
-          <div className="w-full lg:w-72 bg-gray-50/50 dark:bg-black/20 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-white/5 p-8 flex-shrink-0">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 ml-4">Settings Menu</p>
-            <nav className="space-y-2">
-              {SECTIONS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setActive(s.id)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-bold transition-all group",
-                    active === s.id
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/5"
-                  )}
-                >
-                  <span className="flex items-center gap-4">
-                    <s.icon className={cn("w-5 h-5", active === s.id ? "!text-white" : "text-gray-400 group-hover:text-blue-500")} />
-                    {s.label}
-                  </span>
-                  {active === s.id && (
-                    <motion.div layoutId="activeInd" className="w-1.5 h-1.5 bg-white rounded-full" />
-                  )}
-                </button>
-              ))}
-            </nav>
+          <div className="w-full lg:w-72 bg-gray-50/50 dark:bg-black/20 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-white/5 p-6 lg:p-8 flex-shrink-0">
+            <div className="space-y-6">
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-3">Personal Settings</p>
+                <nav className="space-y-1.5">
+                  {SECTIONS.filter((s) => s.group === "Personal").map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setActive(s.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all group",
+                        active === s.id
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                          : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/5"
+                      )}
+                    >
+                      <span className="flex items-center gap-3">
+                        <s.icon className={cn("w-4.5 h-4.5", active === s.id ? "!text-white" : "text-gray-400 group-hover:text-blue-500")} />
+                        <span className="truncate">{s.label}</span>
+                      </span>
+                      {active === s.id && (
+                        <motion.div layoutId="activeInd" className="w-1.5 h-1.5 bg-white rounded-full flex-shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-3">Platform Settings</p>
+                <nav className="space-y-1.5">
+                  {SECTIONS.filter((s) => s.group === "Platform").map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setActive(s.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all group",
+                        active === s.id
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                          : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/5"
+                      )}
+                    >
+                      <span className="flex items-center gap-3">
+                        <s.icon className={cn("w-4.5 h-4.5", active === s.id ? "!text-white" : "text-gray-400 group-hover:text-blue-500")} />
+                        <span className="truncate">{s.label}</span>
+                      </span>
+                      {active === s.id && (
+                        <motion.div layoutId="activeInd" className="w-1.5 h-1.5 bg-white rounded-full flex-shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
           </div>
 
           {/* Connected Content Area */}
           <div className="flex-1 p-10 lg:p-12 overflow-y-auto">
             <AnimatePresence mode="wait">
+              {active === "profile" && (
+                <ProfileTab user={user} />
+              )}
+
+              {active === "account-security" && (
+                <SecurityTab />
+              )}
+
               {active === "general" && (
                 <motion.div 
                   key="general" 

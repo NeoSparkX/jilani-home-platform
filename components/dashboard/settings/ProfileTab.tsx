@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Camera, Check, Loader, Loader2, Mail, Phone, User } from "lucide-react";
@@ -10,9 +10,15 @@ import { updateProfileInfo } from "@/lib/actions/user-actions";
 const AVATAR = "https://images.unsplash.com/photo-1689600944138-da3b150d9cb8?crop=entropy&cs=tinysrgb&fit=facearea&facepad=2&w=256&h=256&q=80";
 
 export function ProfileTab({ user }: { user: any }) {
-  const [name, setName] = useState(user.name || "");
+  const [name, setName] = useState(user?.name || "");
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: "", message: "" });
+
+  useEffect(() => {
+    if (user?.name) {
+      setName(user.name);
+    }
+  }, [user?.name]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +89,7 @@ export function ProfileTab({ user }: { user: any }) {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
               <input
                 name="email"
-                value={user.email || "Email"}
+                value={user?.email || "Email"}
                 disabled
                 className={cn(
                   "w-full min-w-0 truncate pl-12 pr-4 py-3.5 rounded-2xl bg-gray-200 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-700 dark:text-white text-sm font-bold outline-none focus:border-blue-500/50 transition-all placeholder:text-gray-400"
@@ -98,7 +104,7 @@ export function ProfileTab({ user }: { user: any }) {
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
               <input
                 name="phoneNumber"
-                value={user.phoneNumber || "Phone Number"}
+                value={user?.phoneNumber || "Phone Number"}
                 disabled
                 className={cn(
                   "w-full min-w-0 truncate pl-12 pr-4 py-3.5 rounded-2xl bg-gray-200 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-700 dark:text-white text-sm font-bold outline-none focus:border-blue-500/50 transition-all placeholder:text-gray-400"

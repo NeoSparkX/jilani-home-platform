@@ -82,6 +82,7 @@ export async function uploadProfilePicture(formData: FormData) {
 
         // 9. Clear the cache so the dashboard updates instantly!
         revalidatePath("/dashboard", "layout");
+        revalidatePath("/admin", "layout");
 
         return { success: true, url: publicUrl };
 
@@ -119,6 +120,7 @@ export async function updateProfileInfo(formData: FormData) {
 
         //Clear the cache so the dashboard updates instantly
         revalidatePath("/dashboard", "layout");
+        revalidatePath("/admin", "layout");
 
         return { success: true };
 
@@ -175,6 +177,7 @@ export async function updatePassword(formData: FormData) {
             .where(eq(users.id, session.user.id));
 
         revalidatePath("/dashboard", "layout");
+        revalidatePath("/admin", "layout");
 
         return { success: true };
 
