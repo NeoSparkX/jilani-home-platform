@@ -6,6 +6,7 @@ import { users, verificationTokens } from "@/lib/db/schema";
 import { eq, or, and, gte } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { authConfig } from "./auth.config";
+import { normalizePhoneNumber } from "@/lib/utils";
 
 /**
  * Full Auth.js configuration — Node.js runtime ONLY.
@@ -42,18 +43,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             async authorize(credentials) {
                 if (!credentials?.identifier || !credentials?.password) return null;
 
-                const identifierStr = credentials.identifier as string;
+                const rawIdentifier = (credentials.identifier as string).trim();
+                const normalizedEmail = rawIdentifier.toLowerCase();
+                const normalizedPhone = normalizePhoneNumber(rawIdentifier);
+
+                // Build conditions to match either email or phone number in standard or raw format
+                const conditions = [eq(users.email, normalizedEmail)];
+                if (normalizedPhone && normalizedPhone.length >= 10) {
+                    conditions.push(eq(users.phoneNumber, normalizedPhone));
+                }
+                conditions.push(eq(users.phoneNumber, rawIdentifier));
 
                 // Search database for the user by matching EITHER email or phone number
                 const [user] = await db
                     .select()
                     .from(users)
-                    .where(
-                        or(
-                            eq(users.email, identifierStr),
-                            eq(users.phoneNumber, identifierStr)
-                        )
-                    );
+                    .where(or(...conditions));
 
                 if (!user || !user.password) return null;
 
