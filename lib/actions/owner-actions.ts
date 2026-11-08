@@ -5,6 +5,7 @@ import { ownerContacts as owners, properties } from "@/lib/db/schema";
 import { eq, desc, asc, or, ilike, inArray, and, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { normalizePhoneNumber } from "@/lib/utils";
 
 export async function fetchOwners(page: number, limit: number = 10, search = "", sortKey = "updatedAt", sortOrder = "desc", filters: any = {}) {
     const offset = (page - 1) * limit;
@@ -99,9 +100,14 @@ export async function createOwner(data: any) {
             return { success: false, error: "Please fill all the required fields." };
         }
 
+        const normalizedPhone = normalizePhoneNumber(data.phone);
+
         // Checking uniqueness by phone number instead of name for contacts
         const existingOwner = await db.select().from(owners).where(
-            eq(owners.phone, data.phone)
+            or(
+                eq(owners.phone, normalizedPhone),
+                eq(owners.phone, data.phone)
+            )
         );
 
         if (existingOwner.length > 0) {
@@ -111,8 +117,8 @@ export async function createOwner(data: any) {
         const [newOwner] = await db.insert(owners).values({
             name: data.name,
             name_bn: data.name_bn,
-            phone: data.phone,
-            whatsapp: data.whatsapp,
+            phone: normalizedPhone || data.phone,
+            whatsapp: data.whatsapp ? normalizePhoneNumber(data.whatsapp) || data.whatsapp : null,
         }).returning({ id: owners.id });
 
         revalidatePath("/admin/owners", "layout");
@@ -129,12 +135,16 @@ export async function bulkInsertOwners(parsedData: any[]) {
         if (!session?.user?.id) return { success: false, error: "Unauthorized" };
 
         // 1. Clean and format the data to match your schema
-        const formattedOwners = parsedData.map((row) => ({
-            name: row.name || row.Name,
-            name_bn: row.name_bn || row['Name (BN)'] || null,
-            phone: String(row.phone || row.Phone || ''),
-            whatsapp: row.whatsapp || row.Whatsapp || null,
-        })).filter(o => o.name && o.phone); // Ensure required fields exist
+        const formattedOwners = parsedData.map((row) => {
+            const rawPhone = String(row.phone || row.Phone || '');
+            const rawWhatsapp = row.whatsapp || row.Whatsapp ? String(row.whatsapp || row.Whatsapp) : null;
+            return {
+                name: row.name || row.Name,
+                name_bn: row.name_bn || row['Name (BN)'] || null,
+                phone: normalizePhoneNumber(rawPhone) || rawPhone,
+                whatsapp: rawWhatsapp ? normalizePhoneNumber(rawWhatsapp) || rawWhatsapp : null,
+            };
+        }).filter(o => o.name && o.phone); // Ensure required fields exist
 
         if (formattedOwners.length === 0) {
             return { success: false, error: "No valid rows found. Ensure 'name' and 'phone' headers exist." };
@@ -168,13 +178,14 @@ export async function updateOwner(id: string, formData: any) {
             return { success: false, error: "Please fill all the required fields." };
         }
 
+        const normalizedPhone = normalizePhoneNumber(formData.phone);
+
         await db.update(owners)
             .set({
                 name: formData.name,
                 name_bn: formData.name_bn,
-                phone: formData.phone,
-                whatsapp: formData.whatsapp,
-                // updatedAt is omitted because your schema uses .$onUpdate(() => new Date())
+                phone: normalizedPhone || formData.phone,
+                whatsapp: formData.whatsapp ? normalizePhoneNumber(formData.whatsapp) || formData.whatsapp : null,
             })
             .where(eq(owners.id, id));
 

@@ -5,6 +5,7 @@ import { Lock, Mail, Shield, CheckCircle2, KeyRound, Phone, Loader2 } from "luci
 import { sendPhoneOTP, verifyAndUpdatePhone } from "@/lib/actions/auth-action";
 import { useUser } from "@/components/providers/UserProvider";
 import { useSession } from "next-auth/react";
+import { normalizePhoneNumber } from "@/lib/utils";
 
 export default function PhoneUpdateForm() {
     const user = useUser();
@@ -23,12 +24,18 @@ export default function PhoneUpdateForm() {
             setIsUpdating(true);
             setMessage(null);
 
-            if (!phone || phone.length !== 11) {
-                setMessage({ type: "error", text: "Please enter a valid 11-digit phone number" });
+            const normalizedPhone = normalizePhoneNumber(phone);
+            if (!normalizedPhone || normalizedPhone.length !== 11) {
+                setMessage({ type: "error", text: "Please enter a valid phone number (e.g. 017XXXXXXXX or +88017XXXXXXXX)" });
                 return;
             }
 
-            const result = await sendPhoneOTP(phone);
+            if (normalizedPhone === user?.phoneNumber) {
+                setMessage({ type: "error", text: "This is already your current phone number." });
+                return;
+            }
+
+            const result = await sendPhoneOTP(normalizedPhone);
             if (result.success) {
                 setPhoneStep("otp");
             } else {
@@ -52,11 +59,12 @@ export default function PhoneUpdateForm() {
                 return;
             }
 
-            const result = await verifyAndUpdatePhone(phone, otp);
+            const normalizedPhone = normalizePhoneNumber(phone);
+            const result = await verifyAndUpdatePhone(normalizedPhone, otp);
             if (result.success) {
                 setPhoneStep("success");
-                if (phone !== user?.phoneNumber) {
-                    await update({ phoneNumber: phone });
+                if (normalizedPhone !== user?.phoneNumber) {
+                    await update({ phoneNumber: normalizedPhone });
                 }
 
                 setIsUpdating(false);

@@ -377,9 +377,11 @@ export async function sendForgotPasswordOTP(identifier: string) {
         let normalizedIdentifier = identifier.trim();
         const isEmail = identifier.includes("@");
 
-        if (!isEmail) {
-            normalizedIdentifier = identifier.replace(/[\s\-()+]/g, '');
-            if (normalizedIdentifier.length !== 11) {
+        if (isEmail) {
+            normalizedIdentifier = normalizedIdentifier.toLowerCase();
+        } else {
+            normalizedIdentifier = normalizePhoneNumber(identifier);
+            if (!normalizedIdentifier || normalizedIdentifier.length !== 11) {
                 return { success: false, message: "Please provide a valid email or 11 digit phone number." };
             }
         }
@@ -506,8 +508,10 @@ export async function resetPasswordWithOTP(identifier: string, otp: string, newP
 
         let normalizedIdentifier = identifier.trim();
         const isEmail = identifier.includes("@");
-        if (!isEmail) {
-            normalizedIdentifier = identifier.replace(/[\s\-()+]/g, '');
+        if (isEmail) {
+            normalizedIdentifier = normalizedIdentifier.toLowerCase();
+        } else {
+            normalizedIdentifier = normalizePhoneNumber(identifier);
         }
 
         // 1. Verify the OTP exists and is not expired

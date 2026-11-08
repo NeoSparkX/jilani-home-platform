@@ -9,6 +9,7 @@ import { users, savedProperties } from "@/lib/db/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, or } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { normalizePhoneNumber } from "@/lib/utils";
 
 export async function uploadProfilePicture(formData: FormData) {
     try {
@@ -265,10 +266,12 @@ export async function createUser(formData: any) {
         // 🚨 SECURITY: Always hash passwords before storing them
         // const hashedPassword = await bcrypt.hash(formData.password, 10);
 
+        const normalizedPhone = formData.phoneNumber ? normalizePhoneNumber(formData.phoneNumber) : null;
+
         await db.insert(users).values({
             name: formData.name,
-            email: formData.email,
-            phoneNumber: formData.phoneNumber,
+            email: formData.email ? formData.email.trim().toLowerCase() : null,
+            phoneNumber: normalizedPhone,
             password: formData.password, // REPLACE with hashedPassword in production
             role: formData.role,
             pointsBalance: Number(formData.pointsBalance),
@@ -286,11 +289,13 @@ export async function updateUser(id: string, formData: any) {
         const session = await auth();
         if (session?.user?.role !== "admin") return { success: false, error: "Admin access required." };
 
+        const normalizedPhone = formData.phoneNumber ? normalizePhoneNumber(formData.phoneNumber) : null;
+
         await db.update(users)
             .set({
                 name: formData.name,
-                email: formData.email,
-                phoneNumber: formData.phoneNumber,
+                email: formData.email ? formData.email.trim().toLowerCase() : null,
+                phoneNumber: normalizedPhone,
                 role: formData.role,
                 pointsBalance: Number(formData.pointsBalance),
             })
