@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendPhoneOTP, verifyAndSavePhoneOTP } from "@/lib/actions/auth-action";
 import { signOut, useSession, getSession } from "next-auth/react";
+import { normalizePhoneNumber } from "@/lib/utils";
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -54,7 +55,7 @@ export default function OnboardingPage() {
         if (result?.success) {
             // 2. SUCCESS! Update the JWT session with the new phone number
             // so the middleware sees it immediately and doesn't redirect back here
-            await update({ phoneNumber });
+            await update({ phoneNumber: normalizePhoneNumber(phoneNumber) });
             // 3. Force a hard browser redirect to break out of the loading state
             // Fetch the fresh session to determine the user's role
             const freshSession = await getSession();

@@ -21,12 +21,18 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const trimmedIdentifier = identifier.trim();
+    if (!trimmedIdentifier || !password) {
+      setError("Please enter your email or phone number and password.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     // Call Auth.js credentials provider
     const result = await signIn("password-login", {
-      identifier,
+      identifier: trimmedIdentifier,
       password,
       redirect: false, // Prevent NextAuth's default blank error page
     });
@@ -34,7 +40,7 @@ export default function Login() {
     if (result?.error) {
       // Auth.js v5 returns "CredentialsSignin" by default when authorize returns null
       if (result.error === "CredentialsSignin" || result.error.includes("CredentialsSignin")) {
-        setError("Invalid email or password.");
+        setError("Invalid email, phone number, or password.");
       } else {
         setError(result.error);
       }
@@ -102,12 +108,14 @@ export default function Login() {
           {/* Form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#9CA3AF]">Email Address</label>
+              <label className="text-sm font-medium text-[#9CA3AF]">Email or Phone Number</label>
               <input
+                type="text"
                 value={identifier}
                 name='identifier'
+                required
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Email or Phone Number"
+                placeholder="Enter email or phone (e.g. 017XXXXXXXX)"
                 className="w-full bg-[#1A1A1A] border border-white/[0.08] rounded-xl py-3 px-4 text-white placeholder-[#4B5563] text-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6]/60 focus:border-[#3B82F6]/50 transition-all"
               />
             </div>
@@ -125,6 +133,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   name='password'
+                  required
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-[#1A1A1A] border border-white/[0.08] rounded-xl py-3 px-4 pr-11 text-white placeholder-[#4B5563] text-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6]/60 focus:border-[#3B82F6]/50 transition-all"
                 />

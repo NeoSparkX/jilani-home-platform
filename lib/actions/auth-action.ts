@@ -10,45 +10,71 @@ import { getJilaniEmailTemplate } from "@/lib/emails/email-template";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { normalizePhoneNumber } from "@/lib/utils";
 
-export async function sendPhoneOTP(phoneNumber: string) {
+export async function sendPhoneOTP(phoneNumber: string, email?: string) {
     try {
-
-        if (!phoneNumber || phoneNumber.length !== 11) {
+        if (!phoneNumber) {
             return { success: false, message: "Please provide a valid 11 digit phone number." };
         }
 
-        // 1. Generate a random 6-digit OTP code
+        const normalizedPhone = normalizePhoneNumber(phoneNumber);
+        if (!normalizedPhone || normalizedPhone.length !== 11) {
+            return { success: false, message: "Please provide a valid 11 digit phone number." };
+        }
+
+        // 1. Check if the phone number is already registered before sending OTP
+        const [existingUser] = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.phoneNumber, normalizedPhone));
+
+        if (existingUser) {
+            return { success: false, message: "This phone number is already registered." };
+        }
+
+        // 2. Check if email is already registered before sending OTP (if provided)
+        if (email && email.trim() !== "") {
+            const normalizedEmail = email.trim().toLowerCase();
+            const [existingEmail] = await db
+                .select({ id: users.id })
+                .from(users)
+                .where(eq(users.email, normalizedEmail));
+
+            if (existingEmail) {
+                return { success: false, message: "This email address is already registered." };
+            }
+        }
+
+        // 3. Generate a random 6-digit OTP code
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // 2. Set expiration time to exactly 5 minutes from now
+        // 4. Set expiration time to exactly 5 minutes from now
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-        // 3. Clear any existing OTPs for this phone number to prevent conflicts
+        // 5. Clear any existing OTPs for this phone number to prevent conflicts
         await db
             .delete(verificationTokens)
-            .where(eq(verificationTokens.identifier, phoneNumber));
+            .where(eq(verificationTokens.identifier, normalizedPhone));
 
-        // 4. Save the new OTP to your database
+        // 6. Save the new OTP to your database
         await db.insert(verificationTokens).values({
-            identifier: phoneNumber,
+            identifier: normalizedPhone,
             token: otpCode,
             expires: expiresAt,
         });
 
         const message = `Your Jilani Home verification code is: ${otpCode}. It will expire in 5 minutes.`;
 
-        const smsResult = await sendSMS(phoneNumber, message);
+        const smsResult = await sendSMS(normalizedPhone, message);
 
         if (!smsResult.success) {
-            // If SMS failed, we should probably delete the token we just created
+            // If SMS failed, we should delete the token we just created
             // so the user doesn't try to log in with a non-existent code.
             await db
                 .delete(verificationTokens)
-                .where(eq(verificationTokens.identifier, phoneNumber));
+                .where(eq(verificationTokens.identifier, normalizedPhone));
 
-            // Return a user-friendly error. 
-            // In a real app, you might want to fallback to Email OTP here if available.
             return {
                 success: false,
                 message: smsResult.error || "Failed to send verification code. Please try again or contact support."
@@ -74,8 +100,11 @@ export async function verifyAndSavePhoneOTP(phoneNumber: string, otp: string) {
             return { success: false, message: "Please provide phone number and OTP." };
         }
 
-        // 2. Normalize the phone number (removes +88, spaces, etc.)
-        const normalizedPhone = phoneNumber.replace(/[\s\-()+]/g, '');
+        // 2. Normalize the phone number
+        const normalizedPhone = normalizePhoneNumber(phoneNumber);
+        if (!normalizedPhone || normalizedPhone.length !== 11) {
+            return { success: false, message: "Please provide a valid 11 digit phone number." };
+        }
 
         // 3. Verify the OTP exists and is not expired
         const [tokenRecord] = await db
@@ -116,6 +145,8 @@ export async function verifyAndSavePhoneOTP(phoneNumber: string, otp: string) {
 
         // 1. Tell Next.js to clear its server cache so it reads the fresh database data
         revalidatePath("/", "layout");
+        revalidatePath("/dashboard", "layout");
+        revalidatePath("/admin", "layout");
 
         return { success: true, message: "Phone number verified successfully!" };
     } catch (error) {
@@ -136,7 +167,10 @@ export async function verifyAndUpdatePhone(newPhone: string, otp: string) {
         }
 
         // 1. Normalize the new phone number
-        const normalizedPhone = newPhone.replace(/[\s\-()+]/g, '');
+        const normalizedPhone = normalizePhoneNumber(newPhone);
+        if (!normalizedPhone || normalizedPhone.length !== 11) {
+            return { success: false, message: "Please provide a valid 11 digit phone number." };
+        }
 
         // 2. Verify the OTP exists and is not expired
         const [tokenRecord] = await db
@@ -177,6 +211,7 @@ export async function verifyAndUpdatePhone(newPhone: string, otp: string) {
 
         // 6. Clear cache so the dashboard immediately shows the new number
         revalidatePath("/dashboard", "layout");
+        revalidatePath("/admin", "layout");
 
         return { success: true, message: "Phone number updated successfully!" };
     } catch (error) {
@@ -324,6 +359,7 @@ export async function verifyAndUpdateEmail(email: string, otp: string) {
 
         // 6. Clear cache so the dashboard immediately shows the new number
         revalidatePath("/dashboard", "layout");
+        revalidatePath("/admin", "layout");
 
         return { success: true, message: "Email updated successfully!" };
     } catch (error) {
@@ -341,9 +377,11 @@ export async function sendForgotPasswordOTP(identifier: string) {
         let normalizedIdentifier = identifier.trim();
         const isEmail = identifier.includes("@");
 
-        if (!isEmail) {
-            normalizedIdentifier = identifier.replace(/[\s\-()+]/g, '');
-            if (normalizedIdentifier.length !== 11) {
+        if (isEmail) {
+            normalizedIdentifier = normalizedIdentifier.toLowerCase();
+        } else {
+            normalizedIdentifier = normalizePhoneNumber(identifier);
+            if (!normalizedIdentifier || normalizedIdentifier.length !== 11) {
                 return { success: false, message: "Please provide a valid email or 11 digit phone number." };
             }
         }
@@ -470,8 +508,10 @@ export async function resetPasswordWithOTP(identifier: string, otp: string, newP
 
         let normalizedIdentifier = identifier.trim();
         const isEmail = identifier.includes("@");
-        if (!isEmail) {
-            normalizedIdentifier = identifier.replace(/[\s\-()+]/g, '');
+        if (isEmail) {
+            normalizedIdentifier = normalizedIdentifier.toLowerCase();
+        } else {
+            normalizedIdentifier = normalizePhoneNumber(identifier);
         }
 
         // 1. Verify the OTP exists and is not expired

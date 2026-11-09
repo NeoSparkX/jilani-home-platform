@@ -22,6 +22,7 @@ import {
   Compass,
   Heart,
   Settings,
+  User,
   Users,
   BarChart3,
   Building2,
@@ -76,6 +77,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "Transactions", path: "/admin/transactions", icon: BadgeDollarSign },
     { name: "Promo Code", path: "/admin/promos", icon: Ticket },
     { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
+    { name: "Profile", path: "/admin/profile", icon: User },
     { name: "Settings", path: "/admin/settings", icon: Settings },
   ];
 
@@ -250,11 +252,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem asChild>
-                    <Link href={isAdmin ? "/admin/settings" : "/dashboard/settings"} className="cursor-pointer flex w-full items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Account Settings</span>
+                    <Link href={isAdmin ? "/admin/profile" : "/dashboard/settings"} className="cursor-pointer flex w-full items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>{isAdmin ? "Profile Settings" : "Account Settings"}</span>
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/settings" className="cursor-pointer flex w-full items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>System Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-500/10">

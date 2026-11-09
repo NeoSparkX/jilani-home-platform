@@ -33,12 +33,13 @@ export default function SignUp() {
 
     const formData = new FormData(e.currentTarget);
     const phoneNumber = formData.get("phoneNumber") as string;
+    const email = formData.get("email") as string;
 
     // Save the form data in React state so we don't lose it
     setPendingFormData(formData);
 
     // Call the SMS Gateway Server Action to send the text
-    const result = await sendPhoneOTP(phoneNumber);
+    const result = await sendPhoneOTP(phoneNumber, email);
 
     if (result.success) {
       setIsOtpMode(true); // Switch the UI to show the OTP input

@@ -1,3 +1,5 @@
+import { normalizePhoneNumber } from "@/lib/utils";
+
 export async function sendSMS(phone: string, message: string) {
     // 1. Sandbox configuration to protect your wallet balance in development
     // if (process.env.NODE_ENV === "development") {
@@ -7,17 +9,7 @@ export async function sendSMS(phone: string, message: string) {
 
     // 2. Format phone number exactly for Bangladeshi carrier requirements
     // Ensures spacing, brackets, plus signs, and global country codes are normalized
-    let formattedPhone = phone.replace(/\D/g, '');
-    if (formattedPhone.startsWith('8801')) {
-        // Keep it as is or strip down if your endpoint prefers base local format.
-        // Generally, SMSNOC handles both standard local numbers starting with '01' 
-        // and full country code versions. Let's ensure it adheres to standard local matching if preferred:
-        if (formattedPhone.startsWith('88')) {
-            formattedPhone = formattedPhone.substring(2);
-        }
-    } else if (formattedPhone.startsWith('1') && formattedPhone.length === 10) {
-        formattedPhone = '0' + formattedPhone;
-    }
+    const formattedPhone = normalizePhoneNumber(phone) || phone.replace(/\D/g, '');
 
     try {
         const API_KEY = process.env.SMSNOC_API_TOKEN;
